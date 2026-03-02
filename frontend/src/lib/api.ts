@@ -176,7 +176,8 @@ export async function updateCalendarEvent(
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify(updates),
   });
-  if (!res.ok) {
+  // 404/410 = event no longer exists on Google Calendar — ignore gracefully
+  if (!res.ok && res.status !== 404 && res.status !== 410) {
     const err = await res.json();
     throw new Error(err.detail || "Errore nell'aggiornamento dell'evento");
   }
@@ -186,7 +187,8 @@ export async function deleteCalendarEvent(eventId: string): Promise<void> {
   const res = await fetch(`${API_BASE}/api/calendar/events/${eventId}`, {
     method: "DELETE",
   });
-  if (!res.ok) {
+  // 404/410 = event already gone — that's the desired outcome
+  if (!res.ok && res.status !== 404 && res.status !== 410) {
     const err = await res.json();
     throw new Error(err.detail || "Errore nell'eliminazione dell'evento");
   }
