@@ -1,0 +1,79 @@
+[
+  {
+    "id": "metal-sheet",
+    "name": "Metal Sheet",
+    "category": "Supply Chain",
+    "description": "",
+    "sections": [
+      {
+        "title": "Metal Sheet - Restock",
+        "tasks": [
+          {
+            "title": "Richiesta preventivo fornitori",
+            "duration": 2,
+            "offset": 0
+          },
+          {
+            "title": "Confronto offerte",
+            "duration": 1,
+            "offset": 2
+          },
+          {
+            "title": "Approvazione ordine",
+            "duration": 1,
+            "offset": 3
+          },
+          {
+            "title": "Produzione fornitore",
+            "duration": 7,
+            "offset": 4
+          },
+          {
+            "title": "Spedizione e trasporto",
+            "duration": 3,
+            "offset": 11
+          },
+          {
+            "title": "Controllo qualit\u00e0 arrivo",
+            "duration": 1,
+            "offset": 14
+          }
+        ]
+      }
+    ],
+    "custom": true,
+    "phases": [
+      {
+        "title": "Metal Sheet - Restock",
+        "color": "#3B82F6",
+        "tasks": [
+          {
+            "title": "Richiesta preventivo fornitori",
+            "duration": 2.0
+          },
+          {
+            "title": "Confronto offerte",
+            "duration": 1.0
+          },
+          {
+            "title": "Approvazione ordine",
+            "duration": 1.0
+          },
+          {
+            "title": "Produzione fornitore",
+            "duration": 7.0
+          },
+          {
+            "title": "Spedizione e trasporto",
+            "duration": 3.0
+          },
+          {
+            "title": "Controllo qualit\u00e0 arrivo",
+            "duration": 1.0
+          }
+        ]
+      }
+    ],
+    "format": "v2"
+  }
+]

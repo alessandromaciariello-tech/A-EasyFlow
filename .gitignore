@@ -1,0 +1,35 @@
+# Variabili d'ambiente e segreti
+.env
+
+# Credenziali OAuth Google
+credentials.json
+token.json
+
+# File intermedi (sempre rigenerabili)
+.tmp/
+
+# Gantt data (user-generated, not committed)
+backend/gantt_data.json
+
+# Node.js
+node_modules/
+.next/
+out/
+
+# Python
+__pycache__/
+*.pyc
+*.pyo
+venv/
+.venv/
+
+# IDE
+.vscode/
+.idea/
+
+# Env locali
+.env.local
+
+# OS
+.DS_Store
+Thumbs.db

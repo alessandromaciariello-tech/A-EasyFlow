@@ -1,0 +1,182 @@
+datasource db {
+  provider  = "postgresql"
+  url       = env("DATABASE_URL")
+  directUrl = env("DIRECT_URL")
+}
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+model DdmrpProduct {
+  id        String   @id @default(uuid())
+  sku       String   @unique
+  name      String
+  category  String?
+  unitCost  Float    @default(0)
+  sellPrice Float    @default(0)
+  active    Boolean  @default(true)
+  createdAt DateTime @default(now())
+
+  // Per-SKU overrides (null = use SystemConfig defaults)
+  aduWindowDays  Int?
+  orderCycleDays Int?
+  greenDays      Int?
+
+  // Data quality (JSON array of DataQualityFlag)
+  dataQualityFlags String?
+
+  sales              DdmrpSalesDaily[]
+  snapshots          DdmrpInventorySnapshot[]
+  suppliers          DdmrpProductSupplier[]
+  profiles           DdmrpProfile[]
+  purchaseOrderLines DdmrpPurchaseOrderLine[]
+}
+
+model DdmrpWarehouse {
+  id       String  @id @default(uuid())
+  name     String
+  location String?
+
+  snapshots DdmrpInventorySnapshot[]
+  profiles  DdmrpProfile[]
+}
+
+model DdmrpSalesDaily {
+  id          String   @id @default(uuid())
+  productId   String
+  date        DateTime @db.Date
+  qty         Int
+  ordersCount Int      @default(0)
+  channel     String   @default("manual")
+
+  product DdmrpProduct @relation(fields: [productId], references: [id], onDelete: Cascade)
+
+  @@unique([productId, date, channel])
+}
+
+model DdmrpInventorySnapshot {
+  id          String   @id @default(uuid())
+  productId   String
+  warehouseId String
+  date        DateTime @db.Date
+  onHand      Int      @default(0)
+  allocated   Int      @default(0)
+  onOrder     Int      @default(0)
+  available   Int      @default(0)
+
+  product   DdmrpProduct   @relation(fields: [productId], references: [id], onDelete: Cascade)
+  warehouse DdmrpWarehouse @relation(fields: [warehouseId], references: [id])
+
+  @@unique([productId, warehouseId, date])
+}
+
+model DdmrpSupplier {
+  id                  String  @id @default(uuid())
+  name                String
+  email               String?
+  defaultLeadTimeDays Int     @default(14)
+  reliabilityScore    Float   @default(1.0)
+
+  products       DdmrpProductSupplier[]
+  purchaseOrders DdmrpPurchaseOrder[]
+}
+
+model DdmrpProductSupplier {
+  id           String @id @default(uuid())
+  productId    String
+  supplierId   String
+  leadTimeDays Int?
+  moq          Int    @default(1)
+  packSize     Int    @default(1)
+
+  product  DdmrpProduct  @relation(fields: [productId], references: [id], onDelete: Cascade)
+  supplier DdmrpSupplier @relation(fields: [supplierId], references: [id], onDelete: Cascade)
+
+  @@unique([productId, supplierId])
+}
+
+model DdmrpProfile {
+  id          String   @id @default(uuid())
+  productId   String
+  warehouseId String
+  asOfDate    DateTime @db.Date
+
+  avgDailyUsage Float
+  demandStdDev  Float
+  leadTimeDays  Int
+
+  redBase    Float
+  redSafety  Float
+  yellow     Float
+  green      Float
+  topOfGreen Float
+
+  netFlowPosition Float
+  status          String
+
+  recommendedOrderQty  Int?
+  recommendedOrderDate DateTime? @db.Date
+  expectedArrivalDate  DateTime? @db.Date
+  riskStockoutDate     DateTime? @db.Date
+
+  // Extended fields (Restock Control)
+  orderDeadline DateTime? @db.Date
+  daysCoverage  Int?
+  isOverstock   Boolean   @default(false)
+  snoozedUntil  DateTime? @db.Date
+
+  product   DdmrpProduct   @relation(fields: [productId], references: [id], onDelete: Cascade)
+  warehouse DdmrpWarehouse @relation(fields: [warehouseId], references: [id])
+
+  @@unique([productId, warehouseId, asOfDate])
+}
+
+model DdmrpSystemConfig {
+  id                   String  @id @default("default")
+  aduDefaultWindowDays Int     @default(28)
+  serviceLevelZ        Float   @default(1.65)
+  orderCycleDays       Int     @default(7)
+  greenDays            Int     @default(7)
+  roundingRule         String  @default("ceil")
+
+  // Onboarding
+  onboardingCompleted Boolean @default(false)
+  reviewFrequency     String  @default("weekly")
+}
+
+model DdmrpPurchaseOrder {
+  id              String    @id @default(uuid())
+  poNumber        String    @unique
+  supplierId      String
+  status          String    @default("draft") // draft | submitted | confirmed | shipped | received | cancelled
+  createdAt       DateTime  @default(now())
+  submittedAt     DateTime?
+  expectedArrival DateTime? @db.Date
+  receivedAt      DateTime?
+  notes           String?
+
+  supplier DdmrpSupplier          @relation(fields: [supplierId], references: [id])
+  lines    DdmrpPurchaseOrderLine[]
+}
+
+model DdmrpPurchaseOrderLine {
+  id          String @id @default(uuid())
+  orderId     String
+  productId   String
+  qtyOrdered  Int
+  qtyReceived Int    @default(0)
+  unitCost    Float  @default(0)
+
+  order   DdmrpPurchaseOrder @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  product DdmrpProduct       @relation(fields: [productId], references: [id], onDelete: Cascade)
+}
+
+model DdmrpAuditLog {
+  id        String   @id @default(uuid())
+  entity    String   // e.g. "PurchaseOrder", "Profile", "Product"
+  entityId  String
+  action    String   // e.g. "created", "status_changed", "received"
+  details   String?  // JSON string with extra context
+  createdAt DateTime @default(now())
+}
