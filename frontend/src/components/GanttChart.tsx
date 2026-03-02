@@ -743,26 +743,36 @@ export default function GanttChart() {
 
   const handleBatchDelete = async () => {
     if (!project || selected.size === 0) return;
-    const sectionIds = new Set(project.sections.map((s) => s.id));
+    const sectionIdSet = new Set(project.sections.map((s) => s.id));
+    const deletedSections = new Set<string>();
+
+    // 1. Delete selected sections first
     for (const id of selected) {
-      if (sectionIds.has(id)) {
-        await deleteGanttSection(id);
-      } else {
-        for (const sec of project.sections) {
-          const findTask = (tasks: GanttTask[]): boolean => {
-            for (const t of tasks) {
-              if (t.id === id) return true;
-              if (t.children && findTask(t.children)) return true;
-            }
-            return false;
-          };
-          if (findTask(sec.tasks)) {
-            await deleteGanttTask(sec.id, id);
-            break;
+      if (sectionIdSet.has(id)) {
+        try { await deleteGanttSection(id); } catch { /* ignore */ }
+        deletedSections.add(id);
+      }
+    }
+
+    // 2. Delete selected tasks (skip if their section was already deleted)
+    for (const id of selected) {
+      if (sectionIdSet.has(id)) continue; // already handled as section
+      for (const sec of project.sections) {
+        if (deletedSections.has(sec.id)) continue; // section already deleted
+        const findTask = (tasks: GanttTask[]): boolean => {
+          for (const t of tasks) {
+            if (t.id === id) return true;
+            if (t.children && findTask(t.children)) return true;
           }
+          return false;
+        };
+        if (findTask(sec.tasks)) {
+          try { await deleteGanttTask(sec.id, id); } catch { /* ignore */ }
+          break;
         }
       }
     }
+
     setSelected(new Set());
     fetchProject();
   };

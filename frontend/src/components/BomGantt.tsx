@@ -336,26 +336,36 @@ export default function BomGantt({ data, onChanged }: BomGanttProps) {
   // --- Batch delete ---
   const handleBatchDelete = async () => {
     if (selected.size === 0) return;
-    const productIds = new Set(data.products.map((p) => p.id));
+    const productIdSet = new Set(data.products.map((p) => p.id));
+    const deletedProducts = new Set<string>();
+
+    // 1. Delete selected products first
     for (const id of selected) {
-      if (productIds.has(id)) {
-        await deleteBomProduct(id);
-      } else {
-        for (const product of data.products) {
-          const search = (items: BomItem[]): boolean => {
-            for (const item of items) {
-              if (item.id === id) return true;
-              if (search(item.children)) return true;
-            }
-            return false;
-          };
-          if (search(product.children)) {
-            await deleteBomItem(product.id, id);
-            break;
+      if (productIdSet.has(id)) {
+        try { await deleteBomProduct(id); } catch { /* ignore */ }
+        deletedProducts.add(id);
+      }
+    }
+
+    // 2. Delete selected items (skip if their product was already deleted)
+    for (const id of selected) {
+      if (productIdSet.has(id)) continue;
+      for (const product of data.products) {
+        if (deletedProducts.has(product.id)) continue;
+        const search = (items: BomItem[]): boolean => {
+          for (const item of items) {
+            if (item.id === id) return true;
+            if (search(item.children)) return true;
           }
+          return false;
+        };
+        if (search(product.children)) {
+          try { await deleteBomItem(product.id, id); } catch { /* ignore */ }
+          break;
         }
       }
     }
+
     setSelected(new Set());
     onChanged();
   };
