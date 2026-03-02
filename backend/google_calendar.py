@@ -17,6 +17,24 @@ CREDENTIALS_FILE = os.path.join(os.path.dirname(__file__), "..", "credentials.js
 TOKEN_FILE = os.path.join(os.path.dirname(__file__), "..", "token.json")
 REDIRECT_URI = os.getenv("GOOGLE_REDIRECT_URI", "http://localhost:8000/api/auth/callback")
 
+# Fallback: se il file non esiste, crealo da env var (per deploy su Render/Railway)
+def _ensure_credentials_file():
+    if not os.path.exists(CREDENTIALS_FILE):
+        creds_json = os.getenv("GOOGLE_CREDENTIALS_JSON")
+        if creds_json:
+            with open(CREDENTIALS_FILE, "w") as f:
+                f.write(creds_json)
+
+def _ensure_token_file():
+    if not os.path.exists(TOKEN_FILE):
+        token_json = os.getenv("GOOGLE_TOKEN_JSON")
+        if token_json:
+            with open(TOKEN_FILE, "w") as f:
+                f.write(token_json)
+
+_ensure_credentials_file()
+_ensure_token_file()
+
 
 def get_auth_url() -> str:
     """Genera l'URL per il flusso OAuth2 di Google."""
