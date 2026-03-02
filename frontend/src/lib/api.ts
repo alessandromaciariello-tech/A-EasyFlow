@@ -1,4 +1,4 @@
-const API_BASE = "http://localhost:8000";
+const API_BASE = process.env.NEXT_PUBLIC_API_BASE || "http://localhost:8000";
 
 export interface ParsedTask {
   title: string;
@@ -39,6 +39,7 @@ export interface GanttTask {
   collapsed: boolean;
   children: GanttTask[];
   dependencies: string[];
+  daily_hours?: number;
 }
 
 export interface GanttSection {
@@ -166,6 +167,21 @@ export async function getCalendarEvents(
   return data.events;
 }
 
+export async function updateCalendarEvent(
+  eventId: string,
+  updates: { start?: string; end?: string }
+): Promise<void> {
+  const res = await fetch(`${API_BASE}/api/calendar/events/${eventId}`, {
+    method: "PATCH",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(updates),
+  });
+  if (!res.ok) {
+    const err = await res.json();
+    throw new Error(err.detail || "Errore nell'aggiornamento dell'evento");
+  }
+}
+
 export async function deleteCalendarEvent(eventId: string): Promise<void> {
   const res = await fetch(`${API_BASE}/api/calendar/events/${eventId}`, {
     method: "DELETE",
@@ -216,7 +232,7 @@ export async function deleteGanttSection(sectionId: string): Promise<void> {
 
 export async function createGanttTask(
   sectionId: string,
-  task: { title: string; duration: number; start_date: string; color?: string }
+  task: { title: string; duration: number; start_date: string; color?: string; daily_hours?: number }
 ): Promise<GanttTask> {
   const res = await fetch(`${API_BASE}/api/gantt/sections/${sectionId}/tasks`, {
     method: "POST",
@@ -284,6 +300,14 @@ export async function createGanttSubtask(
   return res.json();
 }
 
+export async function syncGanttToCalendar(): Promise<{ synced: number }> {
+  const res = await fetch(`${API_BASE}/api/gantt/sync-calendar`, {
+    method: "POST",
+  });
+  if (!res.ok) throw new Error("Errore nella sincronizzazione Gantt → Calendar");
+  return res.json();
+}
+
 // --- Gantt Templates ---
 
 export async function getGanttTemplates(): Promise<{ categories: GanttTemplateCategory[] }> {
@@ -348,6 +372,9 @@ export interface RestockTask {
   name: string;
   duration_days: number;
   duration_type: "fixed" | "variable";
+  per_unit_duration_days?: number | null;
+  min_duration_days?: number | null;
+  max_duration_days?: number | null;
 }
 
 export interface RestockPhase {
@@ -375,6 +402,8 @@ export interface BomItem {
   unit_cost: number;
   quantity_in_stock: number;
   collapsed: boolean;
+  moq: number;
+  sku: string;
   restock_workflow: RestockWorkflow | null;
   children: BomItem[];
 }
@@ -391,6 +420,11 @@ export interface Supplier {
   name: string;
   phone: string;
   email: string;
+  contact_person: string;
+  channel_type: "email" | "ecommerce_portal" | "whatsapp" | "other";
+  notes: string;
+  default_lead_time: number | null;
+  default_moq: number | null;
 }
 
 export interface InventoryData {
@@ -520,6 +554,8 @@ export async function addBomChild(
     quantity?: number;
     supplier?: string;
     unit_cost?: number;
+    moq?: number;
+    sku?: string;
     restock_workflow?: RestockWorkflow | null;
   }
 ): Promise<BomItem> {
@@ -578,18 +614,29 @@ export async function checkProduction(
 
 // --- Supplier API ---
 
-export async function addSupplier(name: string, phone = "", email = ""): Promise<Supplier[]> {
+export async function addSupplier(
+  name: string,
+  phone = "",
+  email = "",
+  extra: {
+    contact_person?: string;
+    channel_type?: string;
+    notes?: string;
+    default_lead_time?: number | null;
+    default_moq?: number | null;
+  } = {}
+): Promise<Supplier[]> {
   const res = await fetch(`${API_BASE}/api/inventory/suppliers`, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ name, phone, email }),
+    body: JSON.stringify({ name, phone, email, ...extra }),
   });
   if (!res.ok) throw new Error("Errore nell'aggiunta del fornitore");
   const data = await res.json();
   return data.suppliers;
 }
 
-export async function updateSupplier(name: string, updates: { phone?: string; email?: string }): Promise<Supplier[]> {
+export async function updateSupplier(name: string, updates: Partial<Omit<Supplier, "name">>): Promise<Supplier[]> {
   const res = await fetch(
     `${API_BASE}/api/inventory/suppliers/${encodeURIComponent(name)}`,
     {
@@ -767,5 +814,116 @@ export async function getShopifyGanttSuggestions(
     body: JSON.stringify({ message }),
   });
   if (!res.ok) throw new Error("Errore nell'analisi AI Shopify");
+  return res.json();
+}
+
+// --- Restock Engine Types ---
+
+export interface ComponentRecommendation {
+  component_id: string;
+  name: string;
+  needed_per_unit: number;
+  raw_qty: number;
+  moq: number;
+  order_qty: number;
+  supplier: string;
+  unit_cost: number;
+  total_cost: number;
+  lead_time_days: number;
+  in_stock: number;
+}
+
+export interface RestockRecommendation {
+  product_id: string;
+  product_name: string;
+  urgency: "red" | "yellow" | "green";
+  needs_reorder: boolean;
+  current_stock: number;
+  demand_rate: number;
+  demand_std: number;
+  spike_detected: boolean;
+  days_of_cover: number | null;
+  target_cover_days: number;
+  max_lead_time_days: number;
+  reorder_qty: number;
+  order_date: string | null;
+  total_cost: number;
+  components: ComponentRecommendation[];
+}
+
+export interface RestockSettings {
+  safety_stock_days: number;
+  demand_window_days: number;
+  spike_threshold_k: number;
+  deep_work_start: string;
+  deep_work_end: string;
+  noise_start: string;
+  noise_end: string;
+  onboarding_completed: boolean;
+}
+
+export interface OnboardingStatus {
+  completed: boolean;
+  has_products: boolean;
+  has_suppliers: boolean;
+}
+
+export interface RestockConfirmResult {
+  section: GanttSection;
+  product_id: string;
+  product_name: string;
+  reorder_qty: number;
+  total_lead_time_days: number;
+  expected_completion: string;
+}
+
+// --- Restock Engine API ---
+
+export async function getRestockRecommendations(): Promise<RestockRecommendation[]> {
+  const res = await fetch(`${API_BASE}/api/restock/recommendations`);
+  if (!res.ok) throw new Error("Errore nel caricamento raccomandazioni restock");
+  const data = await res.json();
+  return data.recommendations;
+}
+
+export async function confirmRestock(
+  productId: string,
+  reorderQty: number,
+  components?: { component_id: string; order_qty: number }[]
+): Promise<RestockConfirmResult> {
+  const res = await fetch(`${API_BASE}/api/restock/confirm`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({
+      product_id: productId,
+      reorder_qty: reorderQty,
+      components,
+    }),
+  });
+  if (!res.ok) throw new Error("Errore nella conferma restock");
+  return res.json();
+}
+
+export async function getRestockSettings(): Promise<RestockSettings> {
+  const res = await fetch(`${API_BASE}/api/restock/settings`);
+  if (!res.ok) throw new Error("Errore nel caricamento impostazioni");
+  return res.json();
+}
+
+export async function updateRestockSettings(
+  updates: Partial<RestockSettings>
+): Promise<RestockSettings> {
+  const res = await fetch(`${API_BASE}/api/restock/settings`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(updates),
+  });
+  if (!res.ok) throw new Error("Errore nell'aggiornamento impostazioni");
+  return res.json();
+}
+
+export async function getOnboardingStatus(): Promise<OnboardingStatus> {
+  const res = await fetch(`${API_BASE}/api/settings/onboarding-status`);
+  if (!res.ok) throw new Error("Errore nel controllo onboarding");
   return res.json();
 }

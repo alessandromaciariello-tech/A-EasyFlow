@@ -1,9 +1,11 @@
 "use client";
 
 import { useState, useEffect, useCallback, useRef } from "react";
+import { CaretLeft, CaretRight, FunnelSimple } from "@phosphor-icons/react";
 import type { CalendarEvent } from "@/lib/api";
 import { getCalendarEvents, deleteCalendarEvent } from "@/lib/api";
 import TaskCard from "./TaskCard";
+import type { EventSource, TaskStatus } from "./TaskCard";
 
 type ViewMode = "daily" | "weekly";
 
@@ -30,18 +32,53 @@ function getWeekDates(referenceDate: Date): Date[] {
   });
 }
 
+type SourceFilter = "all" | "calendar" | "microtask" | "supplychain";
+
+const SOURCE_FILTERS: { key: SourceFilter; label: string }[] = [
+  { key: "all", label: "Tutti" },
+  { key: "calendar", label: "Calendario" },
+  { key: "microtask", label: "Task" },
+  { key: "supplychain", label: "Supply Chain" },
+];
+
 function parseEventTags(event: CalendarEvent): {
   urgency: "asap" | "normal";
   type: "deep_work" | "noise";
   isLogEase: boolean;
+  source: EventSource;
+  status: TaskStatus | undefined;
 } {
   const desc = (event.description || "");
   const isLogEase = desc.includes("[EasyFlow]") || desc.includes("[Log-Ease]");
   const descLower = desc.toLowerCase();
+
+  // Parse source from description tag: [EasyFlow:source=microtask,status=todo]
+  let source: EventSource = "calendar";
+  let status: TaskStatus | undefined;
+
+  const sourceMatch = desc.match(/\[EasyFlow:([^\]]+)\]/);
+  if (sourceMatch) {
+    const params = sourceMatch[1];
+    const srcMatch = params.match(/source=(\w+)/);
+    if (srcMatch) {
+      const s = srcMatch[1];
+      if (s === "microtask" || s === "supplychain") source = s;
+    }
+    const statMatch = params.match(/status=(\w+)/);
+    if (statMatch) {
+      const st = statMatch[1] as TaskStatus;
+      if (["todo", "doing", "done", "blocked"].includes(st)) status = st;
+    }
+  } else if (isLogEase) {
+    source = "microtask";
+  }
+
   return {
     urgency: descLower.includes("asap") ? "asap" : "normal",
     type: descLower.includes("deep work") ? "deep_work" : "noise",
     isLogEase,
+    source,
+    status,
   };
 }
 
@@ -71,6 +108,7 @@ export default function Dashboard({ refreshTrigger }: DashboardProps) {
   const [view, setView] = useState<ViewMode>("daily");
   const [events, setEvents] = useState<CalendarEvent[]>([]);
   const [currentDate, setCurrentDate] = useState(new Date());
+  const [sourceFilter, setSourceFilter] = useState<SourceFilter>("all");
 
   const goToday = () => setCurrentDate(new Date());
 
@@ -130,40 +168,36 @@ export default function Dashboard({ refreshTrigger }: DashboardProps) {
   return (
     <div className="flex h-full flex-col">
       {/* Header con tabs */}
-      <div className="flex items-center justify-between border-b border-gray-200 px-4 py-3">
+      <div className="flex items-center justify-between border-b border-black/[0.05] px-4 py-3">
         <div className="flex items-center gap-3">
           {/* Frecce navigazione */}
           <div className="flex items-center gap-1">
             <button
               onClick={goPrev}
-              className="rounded-full p-1.5 text-gray-500 hover:bg-gray-100 transition-colors"
+              className="rounded-full p-1.5 text-neutral-dark/50 hover:bg-black/[0.04] hover:text-foreground transition-colors press-scale"
               title={view === "daily" ? "Giorno precedente" : "Settimana precedente"}
             >
-              <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" className="h-4 w-4">
-                <path fillRule="evenodd" d="M12.79 5.23a.75.75 0 01-.02 1.06L8.832 10l3.938 3.71a.75.75 0 11-1.04 1.08l-4.5-4.25a.75.75 0 010-1.08l4.5-4.25a.75.75 0 011.06.02z" clipRule="evenodd" />
-              </svg>
+              <CaretLeft size={16} weight="bold" />
             </button>
             <button
               onClick={goNext}
-              className="rounded-full p-1.5 text-gray-500 hover:bg-gray-100 transition-colors"
+              className="rounded-full p-1.5 text-neutral-dark/50 hover:bg-black/[0.04] hover:text-foreground transition-colors press-scale"
               title={view === "daily" ? "Giorno successivo" : "Settimana successiva"}
             >
-              <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" className="h-4 w-4">
-                <path fillRule="evenodd" d="M7.21 14.77a.75.75 0 01.02-1.06L11.168 10 7.23 6.29a.75.75 0 111.04-1.08l4.5 4.25a.75.75 0 010 1.08l-4.5 4.25a.75.75 0 01-1.06-.02z" clipRule="evenodd" />
-              </svg>
+              <CaretRight size={16} weight="bold" />
             </button>
           </div>
           {/* Bottone Oggi */}
           {getDateStr(currentDate) !== getDateStr(new Date()) && (
             <button
               onClick={goToday}
-              className="rounded-md border border-gray-300 px-2.5 py-1 text-xs font-medium text-gray-600 hover:bg-gray-100 transition-colors"
+              className="rounded-full border border-neutral-dark/15 px-3 py-1 text-xs font-medium text-neutral-dark/70 hover:bg-black/[0.04] hover:text-foreground transition-colors press-scale"
             >
               Oggi
             </button>
           )}
           <div>
-            <h2 className="text-lg font-semibold text-gray-900">
+            <h2 className="text-lg font-semibold text-foreground">
               {currentDate.toLocaleDateString("it-IT", {
                 weekday: "long",
                 day: "numeric",
@@ -173,21 +207,21 @@ export default function Dashboard({ refreshTrigger }: DashboardProps) {
             </h2>
           </div>
         </div>
-        <div className="flex rounded-lg border border-gray-200 bg-gray-50">
+        <div className="flex p-1 rounded-full bg-neutral-dark/[0.06] border border-black/[0.04]">
           <button
             onClick={() => setView("daily")}
-            className={`px-3 py-1.5 text-sm font-medium rounded-l-lg transition-colors ${view === "daily"
-              ? "bg-primary text-white"
-              : "text-neutral-dark hover:bg-neutral-light"
+            className={`px-3.5 py-1.5 text-xs font-medium rounded-full transition-all ${view === "daily"
+              ? "bg-primary text-white shadow-sm"
+              : "text-neutral-dark/60 hover:text-foreground"
               }`}
           >
             Daily
           </button>
           <button
             onClick={() => setView("weekly")}
-            className={`px-3 py-1.5 text-sm font-medium rounded-r-lg transition-colors ${view === "weekly"
-              ? "bg-primary text-white"
-              : "text-neutral-dark hover:bg-neutral-light"
+            className={`px-3.5 py-1.5 text-xs font-medium rounded-full transition-all ${view === "weekly"
+              ? "bg-primary text-white shadow-sm"
+              : "text-neutral-dark/60 hover:text-foreground"
               }`}
           >
             Weekly
@@ -195,28 +229,51 @@ export default function Dashboard({ refreshTrigger }: DashboardProps) {
         </div>
       </div>
 
-      {/* Legenda finestre temporali */}
-      <div className="flex gap-4 border-b border-gray-100 px-4 py-2 text-xs text-gray-500">
-        <span className="flex items-center gap-1">
-          <span className="inline-block h-2.5 w-2.5 rounded-sm bg-blue-100" />
-          Deep Work 09:00–13:30
-        </span>
-        <span className="flex items-center gap-1">
-          <span className="inline-block h-2.5 w-2.5 rounded-sm bg-gray-100 border border-gray-300" />
-          Noise 14:30–20:00
-        </span>
+      {/* Legenda finestre temporali + filtri source */}
+      <div className="flex items-center justify-between border-b border-black/[0.03] px-4 py-2">
+        <div className="flex gap-4 text-xs text-neutral-dark/60">
+          <span className="flex items-center gap-1.5">
+            <span className="inline-block h-2.5 w-2.5 rounded-sm bg-primary/15" />
+            Deep Work 09:00-13:30
+          </span>
+          <span className="flex items-center gap-1.5">
+            <span className="inline-block h-2.5 w-2.5 rounded-sm bg-secondary/15 border border-neutral-dark/10" />
+            Noise 14:30-20:00
+          </span>
+        </div>
+        <div className="flex items-center gap-1">
+          <FunnelSimple size={14} className="text-neutral-dark/40 mr-1" />
+          {SOURCE_FILTERS.map((f) => (
+            <button
+              key={f.key}
+              onClick={() => setSourceFilter(f.key)}
+              className={`rounded-full px-2.5 py-1 text-[10px] font-medium transition-all ${
+                sourceFilter === f.key
+                  ? "bg-primary text-white shadow-sm"
+                  : "text-neutral-dark/50 hover:bg-black/[0.04] hover:text-foreground"
+              }`}
+            >
+              {f.label}
+            </button>
+          ))}
+        </div>
       </div>
 
       {/* Panel content */}
       <div className="flex-1 overflow-y-auto">
         {loading ? (
-          <div className="flex h-full items-center justify-center">
-            <div className="text-sm text-gray-400">Caricamento...</div>
+          <div className="p-6 space-y-2">
+            {[...Array(8)].map((_, i) => (
+              <div key={i} className="flex gap-3">
+                <div className="skeleton-shimmer h-4 w-12 shrink-0" />
+                <div className="skeleton-shimmer h-8 flex-1 rounded-lg" />
+              </div>
+            ))}
           </div>
         ) : view === "daily" ? (
-          <DailyView events={events} dateStr={todayStr} onComplete={handleComplete} />
+          <DailyView events={events} dateStr={todayStr} onComplete={handleComplete} sourceFilter={sourceFilter} />
         ) : (
-          <WeeklyView events={events} weekDates={weekDates} onComplete={handleComplete} />
+          <WeeklyView events={events} weekDates={weekDates} onComplete={handleComplete} sourceFilter={sourceFilter} />
         )}
       </div>
     </div>
@@ -224,20 +281,69 @@ export default function Dashboard({ refreshTrigger }: DashboardProps) {
 }
 
 /* ---- Daily View ---- */
+
+const PX_PER_MINUTE = HOUR_HEIGHT / 60;
+const MIN_DURATION_MINUTES = 15;
+const SNAP_MINUTES = 15;
+
+/** Build an ISO datetime string with timezone offset from a Date object */
+function toLocalISOString(d: Date): string {
+  const tzOffset = -d.getTimezoneOffset();
+  const sign = tzOffset >= 0 ? "+" : "-";
+  const absOffset = Math.abs(tzOffset);
+  const tzH = String(Math.floor(absOffset / 60)).padStart(2, "0");
+  const tzM = String(absOffset % 60).padStart(2, "0");
+  return (
+    d.getFullYear() +
+    "-" + String(d.getMonth() + 1).padStart(2, "0") +
+    "-" + String(d.getDate()).padStart(2, "0") +
+    "T" + String(d.getHours()).padStart(2, "0") +
+    ":" + String(d.getMinutes()).padStart(2, "0") +
+    ":00" + sign + tzH + ":" + tzM
+  );
+}
+
 export function DailyView({
   events,
   dateStr,
   onComplete,
+  onResize,
+  onMove,
   standalone = false,
+  sourceFilter = "all",
 }: {
   events: CalendarEvent[];
   dateStr: string;
   onComplete?: (eventId: string) => void;
+  onResize?: (eventId: string, newEnd: string) => void;
+  onMove?: (eventId: string, newStart: string, newEnd: string) => void;
   standalone?: boolean;
+  sourceFilter?: SourceFilter;
 }) {
   const [now, setNow] = useState(new Date());
   const timeLineRef = useRef<HTMLDivElement>(null);
   const isToday = dateStr === getDateStr(new Date());
+
+  // Drag-to-resize state
+  const [resizing, setResizing] = useState<{
+    eventId: string;
+    startY: number;
+    originalHeight: number;
+    startDateTime: string;
+  } | null>(null);
+  const [dragHeight, setDragHeight] = useState<number | null>(null);
+
+  // Drag-to-move state
+  const [moving, setMoving] = useState<{
+    eventId: string;
+    startY: number;
+    originalTop: number;
+    startDateTime: string;
+    endDateTime: string;
+  } | null>(null);
+  const [dragTop, setDragTop] = useState<number | null>(null);
+
+  const isDragging = !!(resizing || moving);
 
   // Update current time every 60 seconds
   useEffect(() => {
@@ -253,31 +359,117 @@ export function DailyView({
     }
   }, [isToday]);
 
+  // Resize drag listeners
+  useEffect(() => {
+    if (!resizing) return;
+
+    const handleMouseMove = (e: MouseEvent) => {
+      const deltaY = e.clientY - resizing.startY;
+      const rawHeight = resizing.originalHeight + deltaY;
+      const rawMinutes = rawHeight / PX_PER_MINUTE;
+      const snappedMinutes = Math.max(
+        MIN_DURATION_MINUTES,
+        Math.round(rawMinutes / SNAP_MINUTES) * SNAP_MINUTES
+      );
+      setDragHeight(snappedMinutes * PX_PER_MINUTE);
+    };
+
+    const handleMouseUp = (e: MouseEvent) => {
+      if (onResize && resizing) {
+        const deltaY = e.clientY - resizing.startY;
+        const rawHeight = resizing.originalHeight + deltaY;
+        const rawMinutes = rawHeight / PX_PER_MINUTE;
+        const snappedMinutes = Math.max(
+          MIN_DURATION_MINUTES,
+          Math.round(rawMinutes / SNAP_MINUTES) * SNAP_MINUTES
+        );
+        const start = new Date(resizing.startDateTime);
+        const newEnd = new Date(start.getTime() + snappedMinutes * 60_000);
+        onResize(resizing.eventId, toLocalISOString(newEnd));
+      }
+      setResizing(null);
+      setDragHeight(null);
+    };
+
+    document.addEventListener("mousemove", handleMouseMove);
+    document.addEventListener("mouseup", handleMouseUp);
+    return () => {
+      document.removeEventListener("mousemove", handleMouseMove);
+      document.removeEventListener("mouseup", handleMouseUp);
+    };
+  }, [resizing, onResize]);
+
+  // Move drag listeners
+  useEffect(() => {
+    if (!moving) return;
+
+    const handleMouseMove = (e: MouseEvent) => {
+      const deltaY = e.clientY - moving.startY;
+      const rawTop = moving.originalTop + deltaY;
+      const rawMinutes = rawTop / PX_PER_MINUTE;
+      const snappedMinutes = Math.max(0, Math.round(rawMinutes / SNAP_MINUTES) * SNAP_MINUTES);
+      setDragTop(snappedMinutes * PX_PER_MINUTE);
+    };
+
+    const handleMouseUp = (e: MouseEvent) => {
+      if (onMove && moving) {
+        const deltaY = e.clientY - moving.startY;
+        const rawTop = moving.originalTop + deltaY;
+        const rawMinutes = rawTop / PX_PER_MINUTE;
+        const snappedMinutes = Math.max(0, Math.round(rawMinutes / SNAP_MINUTES) * SNAP_MINUTES);
+
+        const origStart = new Date(moving.startDateTime);
+        const origEnd = new Date(moving.endDateTime);
+        const durationMs = origEnd.getTime() - origStart.getTime();
+
+        // Build new start from snapped minutes of the day
+        const dayBase = new Date(origStart);
+        dayBase.setHours(0, 0, 0, 0);
+        const newStart = new Date(dayBase.getTime() + snappedMinutes * 60_000);
+        const newEnd = new Date(newStart.getTime() + durationMs);
+
+        onMove(moving.eventId, toLocalISOString(newStart), toLocalISOString(newEnd));
+      }
+      setMoving(null);
+      setDragTop(null);
+    };
+
+    document.addEventListener("mousemove", handleMouseMove);
+    document.addEventListener("mouseup", handleMouseUp);
+    return () => {
+      document.removeEventListener("mousemove", handleMouseMove);
+      document.removeEventListener("mouseup", handleMouseUp);
+    };
+  }, [moving, onMove]);
+
   const dayEvents = events.filter((e) => {
     const start = e.start.dateTime || e.start.date || "";
-    return start.startsWith(dateStr);
+    if (!start.startsWith(dateStr)) return false;
+    if (sourceFilter === "all") return true;
+    const tags = parseEventTags(e);
+    return tags.source === sourceFilter;
   });
 
   const nowMinutes = now.getHours() * 60 + now.getMinutes();
   const nowTop = nowMinutes * (HOUR_HEIGHT / 60);
 
   return (
-    <div className="relative min-h-full">
+    <div className={`relative min-h-full ${isDragging ? "select-none" : ""}`}>
       {/* Griglia oraria */}
       {HOURS.map((hour) => (
         <div
           key={hour}
-          className="flex border-b border-gray-100"
+          className="flex border-b border-black/[0.03]"
           style={{ height: `${HOUR_HEIGHT}px` }}
         >
-          <div className="w-16 shrink-0 pr-2 text-right text-xs text-gray-400 pt-1">
+          <div className="w-16 shrink-0 pr-2 text-right text-xs text-neutral-dark/40 pt-1 font-mono">
             {hour.toString().padStart(2, "0")}:00
           </div>
           <div
             className={`relative flex-1 ${hour >= 9 && hour < 13
-              ? "bg-[#01af3b]/10"
+              ? "bg-primary/[0.06]"
               : hour >= 14 && hour < 20
-                ? "bg-[#2596be]/10"
+                ? "bg-secondary/[0.06]"
                 : ""
               }`}
           />
@@ -307,14 +499,29 @@ export function DailyView({
           const pos = getEventPosition(event);
           if (!pos) return null;
           const tags = parseEventTags(event);
+          const isBeingResized = resizing?.eventId === event.id;
+          const isBeingMoved = moving?.eventId === event.id;
+          const top = isBeingMoved && dragTop !== null ? dragTop : pos.top;
+          const height = isBeingResized && dragHeight !== null ? dragHeight : pos.height;
 
           return (
             <div
               key={event.id}
-              className="absolute left-0 right-0 px-1"
+              className={`absolute left-0 right-0 px-1 group ${onMove ? (moving ? "cursor-grabbing" : "cursor-grab") : ""} ${isBeingMoved ? "z-30 opacity-90" : ""}`}
               style={{
-                top: `${pos.top}px`,
-                height: `${pos.height}px`,
+                top: `${top}px`,
+                height: `${height}px`,
+              }}
+              onMouseDown={(e) => {
+                if (!onMove) return;
+                e.preventDefault();
+                setMoving({
+                  eventId: event.id,
+                  startY: e.clientY,
+                  originalTop: pos.top,
+                  startDateTime: event.start.dateTime || event.start.date || "",
+                  endDateTime: event.end.dateTime || event.end.date || "",
+                });
               }}
             >
               <TaskCard
@@ -324,8 +531,28 @@ export function DailyView({
                 urgency={tags.urgency}
                 type={tags.type}
                 isLogEase={tags.isLogEase}
+                source={tags.source}
+                status={tags.status}
                 onComplete={onComplete ? () => onComplete(event.id) : undefined}
               />
+              {/* Resize handle */}
+              {onResize && (
+                <div
+                  className="absolute bottom-0 left-1 right-1 h-2 cursor-ns-resize z-10 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity"
+                  onMouseDown={(e) => {
+                    e.stopPropagation();
+                    e.preventDefault();
+                    setResizing({
+                      eventId: event.id,
+                      startY: e.clientY,
+                      originalHeight: height,
+                      startDateTime: event.start.dateTime || event.start.date || "",
+                    });
+                  }}
+                >
+                  <div className="w-8 h-1 rounded-full bg-neutral-dark/30" />
+                </div>
+              )}
             </div>
           );
         })}
@@ -333,7 +560,7 @@ export function DailyView({
 
       {dayEvents.length === 0 && (
         <div className="absolute inset-0 flex items-center justify-center">
-          <p className="text-sm text-gray-400">
+          <p className="text-sm text-neutral-dark/40">
             Nessun evento per oggi. Inizia a chattare per aggiungere task!
           </p>
         </div>
@@ -347,30 +574,35 @@ function WeeklyView({
   events,
   weekDates,
   onComplete,
+  sourceFilter = "all",
 }: {
   events: CalendarEvent[];
   weekDates: Date[];
   onComplete: (eventId: string) => void;
+  sourceFilter?: SourceFilter;
 }) {
   const dayNames = ["Lun", "Mar", "Mer", "Gio", "Ven", "Sab", "Dom"];
   const todayStr = getDateStr(new Date());
 
   return (
-    <div className="grid grid-cols-7 divide-x divide-gray-100">
+    <div className="grid grid-cols-7 divide-x divide-black/[0.04]">
       {weekDates.map((date, i) => {
         const dateStr = getDateStr(date);
         const isToday = dateStr === todayStr;
         const dayEvents = events.filter((e) => {
           const start = e.start.dateTime || e.start.date || "";
-          return start.startsWith(dateStr);
+          if (!start.startsWith(dateStr)) return false;
+          if (sourceFilter === "all") return true;
+          const tags = parseEventTags(e);
+          return tags.source === sourceFilter;
         });
 
         return (
           <div key={dateStr} className="min-h-[200px]">
             <div
               className={`sticky top-0 border-b px-2 py-2 text-center text-xs font-medium ${isToday
-                ? "bg-blue-50 text-blue-700 border-blue-200"
-                : "bg-white text-gray-600 border-gray-200"
+                ? "bg-primary/[0.08] text-primary border-primary/20"
+                : "bg-white text-neutral-dark/70 border-black/[0.05]"
                 }`}
             >
               <div>{dayNames[i]}</div>
@@ -394,6 +626,8 @@ function WeeklyView({
                     urgency={tags.urgency}
                     type={tags.type}
                     isLogEase={tags.isLogEase}
+                    source={tags.source}
+                    status={tags.status}
                     onComplete={() => onComplete(event.id)}
                   />
                 );

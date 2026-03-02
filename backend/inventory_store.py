@@ -82,11 +82,36 @@ def load_data() -> Dict:
     if suppliers and isinstance(suppliers[0], str):
         data["suppliers"] = [{"name": s, "phone": "", "email": ""} for s in suppliers]
         save_data(data)
-    # Migration: ensure desired_stock field on all products
+    # Migration: ensure new supplier fields
     migrated = False
+    for s in data.get("suppliers", []):
+        if isinstance(s, dict):
+            for key, default in [("contact_person", ""), ("channel_type", "email"), ("notes", ""), ("default_lead_time", None), ("default_moq", None)]:
+                if key not in s:
+                    s[key] = default
+                    migrated = True
+    # Migration: ensure desired_stock field on all products
     for p in data.get("products", []):
         if "desired_stock" not in p:
             p["desired_stock"] = None
+            migrated = True
+    # Migration: ensure moq and sku on all BOM items
+    def _migrate_items(items: list) -> bool:
+        changed = False
+        for item in items:
+            if isinstance(item, dict):
+                if "moq" not in item:
+                    item["moq"] = 1
+                    changed = True
+                if "sku" not in item:
+                    item["sku"] = ""
+                    changed = True
+                if item.get("children"):
+                    if _migrate_items(item["children"]):
+                        changed = True
+        return changed
+    for p in data.get("products", []):
+        if _migrate_items(p.get("children", [])):
             migrated = True
     if migrated:
         save_data(data)
@@ -144,6 +169,8 @@ def add_child(
     quantity: int = 1,
     supplier: str = "",
     unit_cost: float = 0,
+    moq: int = 1,
+    sku: str = "",
     restock_workflow: Optional[Dict] = None,
 ) -> Optional[Dict]:
     """Add a child item to any node at any depth within a product."""
@@ -165,6 +192,8 @@ def add_child(
                 "unit_cost": unit_cost,
                 "quantity_in_stock": 0,
                 "collapsed": False,
+                "moq": moq,
+                "sku": sku,
                 "restock_workflow": restock_workflow,
                 "children": [],
             }
@@ -209,25 +238,43 @@ def get_suppliers() -> List[Dict]:
     return data.get("suppliers", [])
 
 
-def add_supplier(name: str, phone: str = "", email: str = "") -> List[Dict]:
+def add_supplier(
+    name: str,
+    phone: str = "",
+    email: str = "",
+    contact_person: str = "",
+    channel_type: str = "email",
+    notes: str = "",
+    default_lead_time: Optional[int] = None,
+    default_moq: Optional[int] = None,
+) -> List[Dict]:
     data = load_data()
     suppliers = data.get("suppliers", [])
     if not any(s["name"] == name for s in suppliers):
-        suppliers.append({"name": name, "phone": phone, "email": email})
+        suppliers.append({
+            "name": name,
+            "phone": phone,
+            "email": email,
+            "contact_person": contact_person,
+            "channel_type": channel_type,
+            "notes": notes,
+            "default_lead_time": default_lead_time,
+            "default_moq": default_moq,
+        })
         suppliers.sort(key=lambda s: s["name"].lower())
         data["suppliers"] = suppliers
         save_data(data)
     return data["suppliers"]
 
 
-def update_supplier(name: str, phone: Optional[str] = None, email: Optional[str] = None) -> List[Dict]:
+def update_supplier(name: str, updates: Dict) -> List[Dict]:
     data = load_data()
+    allowed = {"phone", "email", "contact_person", "channel_type", "notes", "default_lead_time", "default_moq"}
     for s in data.get("suppliers", []):
         if s["name"] == name:
-            if phone is not None:
-                s["phone"] = phone
-            if email is not None:
-                s["email"] = email
+            for key, value in updates.items():
+                if key in allowed:
+                    s[key] = value
             break
     save_data(data)
     return data["suppliers"]
@@ -303,6 +350,7 @@ def _collect_leaves(children: List[Dict], parent_qty: float = 1) -> Dict[str, Di
                     "unit_cost": item.get("unit_cost", 0),
                     "supplier": item.get("supplier", ""),
                     "lead_time_days": _compute_lead_time(item.get("restock_workflow")),
+                    "moq": item.get("moq", 1),
                 }
         else:
             # Intermediate node: recurse

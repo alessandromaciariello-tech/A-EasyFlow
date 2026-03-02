@@ -1,0 +1,10 @@
+{
+  "safety_stock_days": 7,
+  "demand_window_days": 14,
+  "spike_threshold_k": 1.5,
+  "deep_work_start": "09:00",
+  "deep_work_end": "13:30",
+  "noise_start": "14:30",
+  "noise_end": "20:00",
+  "onboarding_completed": false
+}

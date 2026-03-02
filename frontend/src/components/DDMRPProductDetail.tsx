@@ -105,8 +105,12 @@ export default function DDMRPProductDetail({ productId, onBack }: Props) {
 
   if (isLoading || !data) {
     return (
-      <div className="flex items-center justify-center h-full">
-        <div className="h-6 w-6 animate-spin rounded-full border-2 border-primary border-t-transparent" />
+      <div className="flex flex-col items-center justify-center h-full gap-3">
+        <div className="w-full max-w-lg px-6 space-y-3">
+          <div className="h-4 w-1/3 rounded-md bg-neutral-dark/[0.06] animate-pulse" />
+          <div className="h-4 w-2/3 rounded-md bg-neutral-dark/[0.06] animate-pulse" />
+          <div className="h-48 w-full rounded-2xl bg-neutral-dark/[0.06] animate-pulse" />
+        </div>
       </div>
     );
   }
@@ -114,10 +118,10 @@ export default function DDMRPProductDetail({ productId, onBack }: Props) {
   return (
     <div className="flex flex-col h-full overflow-y-auto">
       {/* Header */}
-      <div className="px-6 py-4 border-b border-black/5 flex items-center gap-4">
+      <div className="px-6 py-4 border-b border-black/[0.04] flex items-center gap-4">
         <button
           onClick={onBack}
-          className="text-sm text-neutral-dark/50 hover:text-foreground transition-colors"
+          className="text-sm text-neutral-dark/50 hover:text-foreground hover:bg-black/[0.04] px-2 py-1 rounded-lg transition-colors"
         >
           ← Back
         </button>
@@ -132,7 +136,7 @@ export default function DDMRPProductDetail({ productId, onBack }: Props) {
             )}
           </div>
         </div>
-        <div className="flex gap-1 p-1 bg-black/5 rounded-full">
+        <div className="flex gap-1 p-1 bg-neutral-dark/[0.06] rounded-full">
           {[30, 60, 90].map((d) => (
             <button
               key={d}
@@ -147,12 +151,12 @@ export default function DDMRPProductDetail({ productId, onBack }: Props) {
 
       {/* Chart */}
       <div className="px-6 py-4">
-        <div className="rounded-xl border border-black/5 bg-white p-4">
+        <div className="rounded-2xl border border-black/[0.04] bg-white p-4">
           <h3 className="text-sm font-semibold text-foreground mb-3">Buffer Visualization</h3>
           {chartData.length > 0 ? (
             <ResponsiveContainer width="100%" height={280}>
               <ComposedChart data={chartData} margin={{ top: 5, right: 10, left: 0, bottom: 5 }}>
-                <CartesianGrid strokeDasharray="3 3" stroke="#0000000a" />
+                <CartesianGrid strokeDasharray="3 3" stroke="rgba(180,160,140,0.12)" />
                 <XAxis
                   dataKey="date"
                   tick={{ fontSize: 10, fill: "#999" }}
@@ -246,7 +250,7 @@ export default function DDMRPProductDetail({ productId, onBack }: Props) {
       {/* Panels */}
       <div className="px-6 pb-6 grid grid-cols-2 gap-4">
         {/* Parameters */}
-        <div className="rounded-xl border border-black/5 bg-white p-4">
+        <div className="rounded-2xl border border-black/[0.04] bg-white p-4">
           <h3 className="text-sm font-semibold text-foreground mb-3">Parameters</h3>
           <div className="space-y-2.5">
             <div className="flex items-center justify-between">
@@ -257,7 +261,7 @@ export default function DDMRPProductDetail({ productId, onBack }: Props) {
                   placeholder={String(product?.aduWindowDays ?? "default")}
                   value={overrides.aduWindowDays}
                   onChange={(e) => setOverrides({ ...overrides, aduWindowDays: e.target.value })}
-                  className="w-16 px-2 py-1 text-xs text-right rounded-md border border-black/10 focus:outline-none focus:ring-1 focus:ring-primary/30"
+                  className="w-16 px-2 py-1 text-xs text-right rounded-md border border-black/[0.06] focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary/40"
                 />
                 <span className="text-[10px] text-neutral-dark/40">days</span>
               </div>
@@ -270,7 +274,7 @@ export default function DDMRPProductDetail({ productId, onBack }: Props) {
                   placeholder={String(product?.orderCycleDays ?? "default")}
                   value={overrides.orderCycleDays}
                   onChange={(e) => setOverrides({ ...overrides, orderCycleDays: e.target.value })}
-                  className="w-16 px-2 py-1 text-xs text-right rounded-md border border-black/10 focus:outline-none focus:ring-1 focus:ring-primary/30"
+                  className="w-16 px-2 py-1 text-xs text-right rounded-md border border-black/[0.06] focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary/40"
                 />
                 <span className="text-[10px] text-neutral-dark/40">days</span>
               </div>
@@ -283,7 +287,7 @@ export default function DDMRPProductDetail({ productId, onBack }: Props) {
                   placeholder={String(product?.greenDays ?? "default")}
                   value={overrides.greenDays}
                   onChange={(e) => setOverrides({ ...overrides, greenDays: e.target.value })}
-                  className="w-16 px-2 py-1 text-xs text-right rounded-md border border-black/10 focus:outline-none focus:ring-1 focus:ring-primary/30"
+                  className="w-16 px-2 py-1 text-xs text-right rounded-md border border-black/[0.06] focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary/40"
                 />
                 <span className="text-[10px] text-neutral-dark/40">days</span>
               </div>
@@ -292,7 +296,7 @@ export default function DDMRPProductDetail({ productId, onBack }: Props) {
             {/* Supplier info (read-only) */}
             {supplier && (
               <>
-                <div className="border-t border-black/5 pt-2 mt-2" />
+                <div className="border-t border-black/[0.04] pt-2 mt-2" />
                 <div className="flex items-center justify-between">
                   <label className="text-[11px] text-neutral-dark/60">Supplier</label>
                   <span className="text-xs font-medium text-foreground">{supplier.supplierName}</span>
@@ -315,7 +319,7 @@ export default function DDMRPProductDetail({ productId, onBack }: Props) {
             <button
               onClick={handleSaveOverrides}
               disabled={saving}
-              className="w-full mt-2 px-3 py-1.5 text-xs font-medium text-white bg-foreground rounded-lg hover:bg-foreground/90 disabled:opacity-40"
+              className="w-full mt-2 px-3 py-1.5 text-xs font-medium text-white bg-primary rounded-full press-scale hover:bg-primary/90 disabled:opacity-40"
             >
               {saving ? "Saving..." : "Save Overrides"}
             </button>
@@ -323,7 +327,7 @@ export default function DDMRPProductDetail({ productId, onBack }: Props) {
         </div>
 
         {/* Current Status */}
-        <div className="rounded-xl border border-black/5 bg-white p-4">
+        <div className="rounded-2xl border border-black/[0.04] bg-white p-4">
           <h3 className="text-sm font-semibold text-foreground mb-3">Current Status</h3>
           {profile ? (
             <div className="space-y-2">
@@ -337,7 +341,7 @@ export default function DDMRPProductDetail({ productId, onBack }: Props) {
                 value={profile.demandStdDev.toFixed(1)}
                 tooltip="Standard deviation of daily demand"
               />
-              <div className="border-t border-black/5 pt-2 mt-1" />
+              <div className="border-t border-black/[0.04] pt-2 mt-1" />
               <StatusRow
                 label="Red Zone"
                 value={profile.red.toFixed(0)}
@@ -362,7 +366,7 @@ export default function DDMRPProductDetail({ productId, onBack }: Props) {
                 tooltip="Red + Yellow + Green"
                 bold
               />
-              <div className="border-t border-black/5 pt-2 mt-1" />
+              <div className="border-t border-black/[0.04] pt-2 mt-1" />
               <StatusRow
                 label="Net Flow Position"
                 value={profile.netFlowPosition.toFixed(0)}

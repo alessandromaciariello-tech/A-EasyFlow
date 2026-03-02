@@ -276,11 +276,11 @@ export default function ChatPanel({ onTaskScheduled }: ChatPanelProps) {
   return (
     <div className="flex h-full flex-col">
       {/* Header */}
-      <div className="border-b border-gray-200 px-4 py-3">
-        <h2 className="text-lg font-semibold text-gray-900">
+      <div className="border-b border-black/[0.05] px-4 py-3">
+        <h2 className="text-lg font-semibold text-foreground">
           AI Chat
         </h2>
-        <p className="text-sm text-gray-500">
+        <p className="text-sm text-neutral-dark/60">
           Descrivi la tua task in linguaggio naturale
         </p>
       </div>
@@ -294,7 +294,7 @@ export default function ChatPanel({ onTaskScheduled }: ChatPanelProps) {
           >
             <div
               className={`max-w-[85%] rounded-2xl px-4 py-2.5 ${msg.role === "user"
-                ? "bg-primary text-white"
+                ? "bg-foreground text-white"
                 : "bg-neutral-light text-neutral-dark"
                 }`}
             >
@@ -306,7 +306,7 @@ export default function ChatPanel({ onTaskScheduled }: ChatPanelProps) {
                   {msg.parsedTasks.map((task, idx) => (
                     <div key={idx} className="flex flex-wrap gap-1.5">
                       {msg.parsedTasks!.length > 1 && (
-                        <span className="text-xs text-gray-500 mr-1">{idx + 1}.</span>
+                        <span className="text-xs text-neutral-dark/60 mr-1">{idx + 1}.</span>
                       )}
                       <TagBadge
                         label={task.urgency === "asap" ? "ASAP" : "To-Do"}
@@ -363,11 +363,11 @@ export default function ChatPanel({ onTaskScheduled }: ChatPanelProps) {
 
         {loading && (
           <div className="flex justify-start">
-            <div className="rounded-2xl bg-gray-100 px-4 py-2.5">
+            <div className="rounded-2xl bg-neutral-dark/[0.06] px-4 py-2.5">
               <div className="flex gap-1">
-                <span className="h-2 w-2 animate-bounce rounded-full bg-gray-400" />
-                <span className="h-2 w-2 animate-bounce rounded-full bg-gray-400 [animation-delay:0.1s]" />
-                <span className="h-2 w-2 animate-bounce rounded-full bg-gray-400 [animation-delay:0.2s]" />
+                <span className="h-2 w-2 animate-bounce rounded-full bg-neutral-dark/40" />
+                <span className="h-2 w-2 animate-bounce rounded-full bg-neutral-dark/40 [animation-delay:0.1s]" />
+                <span className="h-2 w-2 animate-bounce rounded-full bg-neutral-dark/40 [animation-delay:0.2s]" />
               </div>
             </div>
           </div>
@@ -376,7 +376,7 @@ export default function ChatPanel({ onTaskScheduled }: ChatPanelProps) {
 
       {/* Conferma scheduling */}
       {editingTasks && !loading && (
-        <div className="border-t border-gray-200 bg-gray-50 px-4 py-3 flex gap-2">
+        <div className="border-t border-black/[0.05] bg-neutral-light/50 px-4 py-3 flex gap-2">
           <button
             onClick={handleConfirm}
             className="flex-1 rounded-lg bg-brand-gradient px-4 py-2 text-sm font-medium text-white hover:bg-secondary transition-colors"
@@ -395,7 +395,7 @@ export default function ChatPanel({ onTaskScheduled }: ChatPanelProps) {
       )}
 
       {/* Tag buttons + Duration + Input */}
-      <div className="border-t border-gray-200 px-4 pt-3 pb-4 space-y-2.5">
+      <div className="border-t border-black/[0.05] px-4 pt-3 pb-4 space-y-2.5">
         {/* Riga 1: Tag buttons */}
         <div className="flex gap-2">
           <button
@@ -416,7 +416,7 @@ export default function ChatPanel({ onTaskScheduled }: ChatPanelProps) {
           >
             Noise
           </button>
-          <div className="w-px bg-gray-200" />
+          <div className="w-px bg-black/[0.05]" />
           <button
             onClick={() => setSelectedUrgency(selectedUrgency === "asap" ? null : "asap")}
             className={`rounded-lg px-3 py-1.5 text-xs font-medium border transition-colors ${selectedUrgency === "asap"
@@ -472,7 +472,7 @@ export default function ChatPanel({ onTaskScheduled }: ChatPanelProps) {
 
         {/* Trascrizione live durante registrazione */}
         {isListening && transcript && (
-          <div className="rounded-lg bg-blue-50 border border-blue-200 px-3 py-2 text-sm text-blue-700 italic">
+          <div className="rounded-lg bg-primary/[0.06] border border-primary/20 px-3 py-2 text-sm text-primary italic">
             {transcript}...
           </div>
         )}
@@ -485,7 +485,7 @@ export default function ChatPanel({ onTaskScheduled }: ChatPanelProps) {
               disabled={loading}
               className={`shrink-0 rounded-xl px-3 py-2.5 transition-colors ${isListening
                 ? "bg-red-500 text-white animate-pulse"
-                : "bg-gray-100 text-gray-600 hover:bg-gray-200"
+                : "bg-neutral-dark/[0.06] text-neutral-dark/70 hover:bg-black/[0.06]"
                 } disabled:opacity-50`}
               title={isListening ? "Ferma registrazione" : "Parla per descrivere la task"}
             >
@@ -511,7 +511,7 @@ export default function ChatPanel({ onTaskScheduled }: ChatPanelProps) {
             placeholder={isListening ? "Sto ascoltando..." : "Descrivi la tua task..."}
             className={`flex-1 rounded-xl border px-4 py-2.5 text-sm focus:outline-none focus:ring-1 transition-colors ${isListening
               ? "border-red-300 bg-red-50 focus:border-red-500 focus:ring-red-500"
-              : "border-gray-200 focus:border-primary focus:ring-primary"
+              : "border-black/[0.05] focus:border-primary/40 focus:ring-primary/20"
               }`}
             disabled={loading || isListening}
           />

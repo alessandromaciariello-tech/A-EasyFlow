@@ -11,12 +11,39 @@ from typing import List, Optional
 import anthropic
 
 
-def parse_tasks_from_message(user_message: str) -> List[dict]:
+def _format_events_for_prompt(events: List[dict]) -> str:
+    """Format existing calendar events into a readable list for the AI prompt."""
+    if not events:
+        return ""
+    lines = []
+    for ev in events:
+        title = ev.get("title", "Senza titolo")
+        start_raw = ev.get("start", "")
+        end_raw = ev.get("end", "")
+        # Extract HH:MM from ISO datetime strings
+        start_time = ""
+        end_time = ""
+        try:
+            if "T" in start_raw:
+                start_time = start_raw.split("T")[1][:5]
+            if "T" in end_raw:
+                end_time = end_raw.split("T")[1][:5]
+        except (IndexError, TypeError):
+            pass
+        if start_time and end_time:
+            lines.append(f"- {start_time}-{end_time}: {title}")
+        elif start_time:
+            lines.append(f"- {start_time}: {title}")
+    return "\n".join(lines)
+
+
+def parse_tasks_from_message(user_message: str, existing_events: Optional[List[dict]] = None) -> List[dict]:
     """
     Analizza un messaggio in linguaggio naturale e ne estrae una o più task strutturate.
 
     Args:
         user_message: messaggio dell'utente in linguaggio naturale
+        existing_events: lista di eventi gia' in calendario oggi [{title, start, end}]
 
     Returns:
         Lista di dict con: title, urgency, type, duration, preferred_date, preferred_time
@@ -27,9 +54,23 @@ def parse_tasks_from_message(user_message: str) -> List[dict]:
     date_context = now.strftime("%A %d %B %Y, ore %H:%M")
     iso_date = now.strftime("%Y-%m-%d")
 
+    # Build event context for the AI
+    events_section = ""
+    events_text = _format_events_for_prompt(existing_events or [])
+    if events_text:
+        events_section = f"""
+EVENTI GIA' IN CALENDARIO OGGI:
+{events_text}
+
+Quando l'utente dice "dopo la lezione", "prima del meeting", "dopo X", "prima di Y", usa gli orari sopra per calcolare il preferred_time corretto.
+Es: se "Lezione" finisce alle 15:30 e l'utente dice "dopo la lezione" → preferred_time = "15:30" (fine della lezione).
+Es: se "Meeting" inizia alle 16:00 e l'utente dice "prima del meeting, 30 minuti" → preferred_time = "15:30" (16:00 meno 30 min).
+"""
+
     system_prompt = f"""Sei un assistente che analizza messaggi in linguaggio naturale per estrarre task strutturate.
 
 DATA E ORA CORRENTE: {date_context} ({iso_date})
+{events_section}
 
 Per OGNI attività menzionata nel messaggio, estrai:
 - "title": un titolo breve e chiaro per la task

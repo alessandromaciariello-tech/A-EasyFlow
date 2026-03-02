@@ -73,6 +73,12 @@ export function useVoiceInput(
   const stoppedByUserRef = useRef(false);
   const retryCountRef = useRef(0);
 
+  // Store onResult in a ref to break the dependency chain
+  const onResultRef = useRef(onResult);
+  useEffect(() => {
+    onResultRef.current = onResult;
+  }, [onResult]);
+
   useEffect(() => {
     const SpeechRecognitionAPI =
       window.SpeechRecognition || window.webkitSpeechRecognition;
@@ -126,15 +132,13 @@ export function useVoiceInput(
       if (event.error === "no-speech" || event.error === "aborted") return;
 
       if (event.error === "network") {
-        // Auto-retry fino a 3 volte su errore network con delay crescente
         if (retryCountRef.current < 3) {
           const delay = 500 * (retryCountRef.current + 1);
           retryCountRef.current++;
           recognitionRef.current = null;
-          setTimeout(() => startListening(), delay);
+          setTimeout(() => startListeningRef.current(), delay);
           return;
         }
-        // Se tutti i retry falliscono, mostra messaggio utile
         setError(
           window.location.hostname !== "localhost"
             ? "Errore di rete: apri l'app da http://localhost:3000 (non 127.0.0.1)"
@@ -156,13 +160,17 @@ export function useVoiceInput(
       const text = finalTranscriptRef.current;
       if (stoppedByUserRef.current && text) {
         const commands = parseVoiceCommands(text);
-        onResult(commands);
+        onResultRef.current(commands);
       }
     };
 
     recognitionRef.current = recognition;
     recognition.start();
-  }, [onResult]);
+  }, []); // No dependencies — uses refs for callbacks
+
+  // Ref for startListening so retry setTimeout always calls the latest version
+  const startListeningRef = useRef(startListening);
+  startListeningRef.current = startListening;
 
   const stopListening = useCallback(() => {
     if (recognitionRef.current) {

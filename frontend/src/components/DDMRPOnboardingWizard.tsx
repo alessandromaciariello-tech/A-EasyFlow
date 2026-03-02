@@ -337,7 +337,7 @@ export default function DDMRPOnboardingWizard({ onComplete }: Props) {
 
   return (
     <div className="flex flex-col h-full overflow-y-auto">
-      <div className="px-8 py-6 border-b border-black/5">
+      <div className="px-8 py-6 border-b border-black/[0.04]">
         <h2 className="text-xl font-bold text-foreground">DDMRP Setup Wizard</h2>
         <p className="text-sm text-neutral-dark/50 mt-1">
           Set up your Demand Driven replenishment system in 4 steps
@@ -351,7 +351,7 @@ export default function DDMRPOnboardingWizard({ onComplete }: Props) {
                 onClick={() => i < step && setStep(i)}
                 className={`flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium rounded-full transition-colors ${
                   i === step
-                    ? "bg-foreground text-white"
+                    ? "bg-primary text-white"
                     : i < step
                     ? "bg-emerald-100 text-emerald-700 cursor-pointer"
                     : "text-neutral-dark/30"
@@ -383,10 +383,10 @@ export default function DDMRPOnboardingWizard({ onComplete }: Props) {
               ].map((opt) => (
                 <label
                   key={opt.value}
-                  className={`flex items-start gap-3 p-3 rounded-xl border cursor-pointer transition-colors ${
+                  className={`flex items-start gap-3 p-3 rounded-2xl border cursor-pointer transition-colors ${
                     scope === opt.value
-                      ? "border-foreground bg-black/[0.02]"
-                      : "border-black/10 hover:border-black/20"
+                      ? "border-primary bg-black/[0.02]"
+                      : "border-black/[0.06] hover:border-black/20"
                   }`}
                 >
                   <input
@@ -408,7 +408,7 @@ export default function DDMRPOnboardingWizard({ onComplete }: Props) {
               <button
                 onClick={handleSync}
                 disabled={syncing}
-                className="mt-4 px-4 py-2 text-sm font-medium text-white bg-foreground rounded-lg hover:bg-foreground/90 disabled:opacity-40"
+                className="mt-4 px-4 py-2 text-sm font-medium text-white bg-primary rounded-full press-scale hover:bg-primary/90 disabled:opacity-40"
               >
                 {syncing ? "Syncing from Shopify..." : "Sync from Shopify"}
               </button>
@@ -416,7 +416,7 @@ export default function DDMRPOnboardingWizard({ onComplete }: Props) {
 
             {/* Post-sync: All Products */}
             {syncDone && scope === "all" && (
-              <div className="mt-3 p-3 bg-emerald-50 rounded-lg text-sm text-emerald-700">
+              <div className="mt-3 p-3 bg-emerald-50 rounded-2xl text-sm text-emerald-700">
                 {allProducts.length} products synced. All will be tracked.
               </div>
             )}
@@ -429,14 +429,14 @@ export default function DDMRPOnboardingWizard({ onComplete }: Props) {
                 </p>
 
                 {uniqueCategories.length === 0 && uncategorizedProducts.length > 0 && (
-                  <div className="p-3 bg-amber-50 rounded-lg text-xs text-amber-700">
+                  <div className="p-3 bg-amber-50 rounded-2xl text-xs text-amber-700">
                     No categories found in Shopify. All products are uncategorized.
                     Use &quot;Manual Select&quot; to pick specific products.
                   </div>
                 )}
 
                 {uniqueCategories.length > 0 && (
-                  <div className="max-h-52 overflow-y-auto space-y-1 p-2 border border-black/10 rounded-xl">
+                  <div className="max-h-52 overflow-y-auto space-y-1 p-2 border border-black/[0.06] rounded-2xl">
                     {uniqueCategories.map((cat) => {
                       const count = allProducts.filter((p) => p.category === cat).length;
                       return (
@@ -477,7 +477,7 @@ export default function DDMRPOnboardingWizard({ onComplete }: Props) {
                   placeholder="Search by name or SKU..."
                   value={searchFilter}
                   onChange={(e) => setSearchFilter(e.target.value)}
-                  className="w-full px-3 py-2 text-sm rounded-lg border border-black/10 focus:outline-none focus:ring-1 focus:ring-primary/30"
+                  className="w-full px-3 py-2 text-sm rounded-lg border border-black/[0.06] focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary/40"
                 />
 
                 <div className="flex gap-3">
@@ -495,7 +495,7 @@ export default function DDMRPOnboardingWizard({ onComplete }: Props) {
                   </button>
                 </div>
 
-                <div className="max-h-56 overflow-y-auto space-y-1 p-2 border border-black/10 rounded-xl">
+                <div className="max-h-56 overflow-y-auto space-y-1 p-2 border border-black/[0.06] rounded-2xl">
                   {filteredManualProducts.map((p) => (
                     <label
                       key={p.id}
@@ -542,7 +542,7 @@ export default function DDMRPOnboardingWizard({ onComplete }: Props) {
                   type="number"
                   value={leadTimeDefault}
                   onChange={(e) => handleLeadTimeChange(parseInt(e.target.value) || 14)}
-                  className="mt-1 w-full px-3 py-2 text-sm rounded-lg border border-black/10 focus:outline-none focus:ring-1 focus:ring-primary/30"
+                  className="mt-1 w-full px-3 py-2 text-sm rounded-lg border border-black/[0.06] focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary/40"
                 />
                 {hasBomMatch && (
                   <div className="mt-1.5 space-y-1">
@@ -582,7 +582,7 @@ export default function DDMRPOnboardingWizard({ onComplete }: Props) {
                   type="number"
                   value={moqDefault}
                   onChange={(e) => handleMoqChange(parseInt(e.target.value) || 1)}
-                  className="mt-1 w-full px-3 py-2 text-sm rounded-lg border border-black/10 focus:outline-none focus:ring-1 focus:ring-primary/30"
+                  className="mt-1 w-full px-3 py-2 text-sm rounded-lg border border-black/[0.06] focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary/40"
                 />
               </div>
               <div>
@@ -591,7 +591,7 @@ export default function DDMRPOnboardingWizard({ onComplete }: Props) {
                   type="number"
                   value={packSizeDefault}
                   onChange={(e) => setPackSizeDefault(parseInt(e.target.value) || 1)}
-                  className="mt-1 w-full px-3 py-2 text-sm rounded-lg border border-black/10 focus:outline-none focus:ring-1 focus:ring-primary/30"
+                  className="mt-1 w-full px-3 py-2 text-sm rounded-lg border border-black/[0.06] focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary/40"
                 />
               </div>
             </div>
@@ -616,10 +616,10 @@ export default function DDMRPOnboardingWizard({ onComplete }: Props) {
                     <button
                       key={sl.z}
                       onClick={() => setServiceLevelZ(sl.z)}
-                      className={`flex-1 px-3 py-2 text-sm font-medium rounded-lg border transition-colors ${
+                      className={`flex-1 px-3 py-2 text-sm font-medium rounded-2xl border transition-colors ${
                         serviceLevelZ === sl.z
-                          ? "border-foreground bg-foreground text-white"
-                          : "border-black/10 hover:border-black/20"
+                          ? "border-primary bg-primary text-white"
+                          : "border-black/[0.06] hover:border-black/20"
                       }`}
                     >
                       {sl.label}
@@ -638,10 +638,10 @@ export default function DDMRPOnboardingWizard({ onComplete }: Props) {
                     <button
                       key={w}
                       onClick={() => setAduWindowDays(w)}
-                      className={`flex-1 px-3 py-2 text-sm font-medium rounded-lg border transition-colors ${
+                      className={`flex-1 px-3 py-2 text-sm font-medium rounded-2xl border transition-colors ${
                         aduWindowDays === w
-                          ? "border-foreground bg-foreground text-white"
-                          : "border-black/10 hover:border-black/20"
+                          ? "border-primary bg-primary text-white"
+                          : "border-black/[0.06] hover:border-black/20"
                       }`}
                     >
                       {w}d
@@ -657,7 +657,7 @@ export default function DDMRPOnboardingWizard({ onComplete }: Props) {
                     type="number"
                     value={orderCycleDays}
                     onChange={(e) => setOrderCycleDays(parseInt(e.target.value) || 7)}
-                    className="mt-1 w-full px-3 py-2 text-sm rounded-lg border border-black/10 focus:outline-none focus:ring-1 focus:ring-primary/30"
+                    className="mt-1 w-full px-3 py-2 text-sm rounded-lg border border-black/[0.06] focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary/40"
                   />
                 </div>
                 <div>
@@ -666,7 +666,7 @@ export default function DDMRPOnboardingWizard({ onComplete }: Props) {
                     type="number"
                     value={greenDays}
                     onChange={(e) => setGreenDays(parseInt(e.target.value) || 7)}
-                    className="mt-1 w-full px-3 py-2 text-sm rounded-lg border border-black/10 focus:outline-none focus:ring-1 focus:ring-primary/30"
+                    className="mt-1 w-full px-3 py-2 text-sm rounded-lg border border-black/[0.06] focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary/40"
                   />
                 </div>
               </div>
@@ -682,7 +682,7 @@ export default function DDMRPOnboardingWizard({ onComplete }: Props) {
               Review your settings and launch the DDMRP system.
             </p>
 
-            <div className="mt-4 space-y-2 p-4 rounded-xl border border-black/10 bg-black/[0.01]">
+            <div className="mt-4 space-y-2 p-4 rounded-2xl border border-black/[0.06] bg-neutral-light/40">
               <SummaryRow label="Scope" value={scopeLabel()} />
               <SummaryRow label="Products Tracked" value={`${selectedCount}`} />
               <SummaryRow
@@ -707,7 +707,7 @@ export default function DDMRPOnboardingWizard({ onComplete }: Props) {
             <button
               onClick={handleLaunch}
               disabled={launching}
-              className="w-full mt-4 px-4 py-3 text-sm font-bold text-white bg-foreground rounded-xl hover:bg-foreground/90 disabled:opacity-40 transition-colors"
+              className="w-full mt-4 px-4 py-3 text-sm font-bold text-white bg-primary rounded-full press-scale hover:bg-primary/90 disabled:opacity-40 transition-colors"
             >
               {launching ? "Launching..." : "Launch DDMRP Control Tower"}
             </button>
@@ -716,7 +716,7 @@ export default function DDMRPOnboardingWizard({ onComplete }: Props) {
       </div>
 
       {/* Footer navigation */}
-      <div className="px-8 py-4 border-t border-black/5 flex items-center justify-between">
+      <div className="px-8 py-4 border-t border-black/[0.04] flex items-center justify-between">
         <button
           onClick={() => setStep(Math.max(0, step - 1))}
           disabled={step === 0}
@@ -728,7 +728,7 @@ export default function DDMRPOnboardingWizard({ onComplete }: Props) {
           <button
             onClick={handleNext}
             disabled={!canGoNext() || advancing}
-            className="px-4 py-2 text-sm font-medium text-white bg-foreground rounded-lg hover:bg-foreground/90 disabled:opacity-40 transition-colors"
+            className="px-4 py-2 text-sm font-medium text-white bg-primary rounded-full press-scale hover:bg-primary/90 disabled:opacity-40 transition-colors"
           >
             {advancing ? "Saving..." : "Next"}
           </button>

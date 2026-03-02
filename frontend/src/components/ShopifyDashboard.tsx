@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect, useCallback } from "react";
+import { ShoppingBag, Warning } from "@phosphor-icons/react";
 import type {
   ShopifyStatus,
   ShopifyDashboardData,
@@ -11,10 +12,10 @@ type Period = 7 | 30 | 90;
 
 // Palette colori per il pie chart
 const PIE_COLORS = [
-  "#22c55e", "#3b82f6", "#f59e0b", "#ef4444", "#8b5cf6",
-  "#ec4899", "#14b8a6", "#f97316", "#6366f1", "#06b6d4",
-  "#84cc16", "#e11d48", "#0ea5e9", "#a855f7", "#10b981",
-  "#d946ef", "#facc15", "#64748b", "#fb923c", "#2dd4bf",
+  "#2D6A4F", "#5E8C6A", "#8B7355", "#B4846C", "#7C6F64",
+  "#A5978B", "#6B8E7B", "#C4956A", "#9B8EA8", "#6B9080",
+  "#C17652", "#7BA38E", "#B89C73", "#8B6D5C", "#6B8FA0",
+  "#D4A574", "#8FA876", "#A07855", "#6B7B8E", "#B89078",
 ];
 
 // --- Sub-componenti ---
@@ -31,17 +32,20 @@ function KpiCard({
   color?: "green" | "blue" | "purple" | "amber";
 }) {
   const colorMap = {
-    green: "bg-green-50 text-green-600",
-    blue: "bg-blue-50 text-blue-600",
-    purple: "bg-purple-50 text-purple-600",
-    amber: "bg-amber-50 text-amber-600",
+    green: "bg-emerald-50/60 text-[#2D6A4F]",
+    blue: "bg-sky-50/60 text-sky-700",
+    purple: "bg-[#FAF8F5] text-[#8B7355]",
+    amber: "bg-amber-50/60 text-amber-700",
   };
   return (
-    <div className="rounded-xl border border-gray-200 bg-white p-4 shadow-sm">
-      <p className="text-xs font-medium text-gray-500 mb-1">{title}</p>
-      <p className="text-xl font-bold text-gray-900">{value}</p>
+    <div
+      className="rounded-2xl border border-black/[0.05] bg-white p-5"
+      style={{ boxShadow: "0 2px 12px rgba(60,50,40,0.04)" }}
+    >
+      <p className="text-xs font-medium text-neutral-dark/60 mb-1">{title}</p>
+      <p className="text-xl font-bold text-foreground">{value}</p>
       {subtitle && (
-        <p className="text-xs text-gray-400 mt-0.5">{subtitle}</p>
+        <p className="text-xs text-neutral-dark/40 mt-0.5">{subtitle}</p>
       )}
       <div className={`mt-2 h-1 w-8 rounded-full ${colorMap[color].split(" ")[0]}`} />
     </div>
@@ -56,7 +60,7 @@ function PieChart({
   const total = data.reduce((sum, d) => sum + d.revenue, 0);
   if (total === 0) {
     return (
-      <div className="flex h-48 items-center justify-center text-sm text-gray-400">
+      <div className="flex h-48 items-center justify-center text-sm text-neutral-dark/40">
         Nessun dato disponibile
       </div>
     );
@@ -95,9 +99,9 @@ function PieChart({
                 className="h-2.5 w-2.5 rounded-sm flex-shrink-0"
                 style={{ backgroundColor: PIE_COLORS[i % PIE_COLORS.length] }}
               />
-              <span className="text-gray-700 truncate flex-1 min-w-0">{item.title}</span>
-              <span className="text-gray-500 flex-shrink-0">{pct}%</span>
-              <span className="text-gray-900 font-medium flex-shrink-0">&euro;{item.revenue.toFixed(0)}</span>
+              <span className="text-neutral-dark truncate flex-1 min-w-0">{item.title}</span>
+              <span className="text-neutral-dark/60 flex-shrink-0">{pct}%</span>
+              <span className="text-foreground font-medium flex-shrink-0">&euro;{item.revenue.toFixed(0)}</span>
             </div>
           );
         })}
@@ -109,11 +113,9 @@ function PieChart({
 function SetupInstructions() {
   return (
     <div className="flex h-full items-center justify-center p-8">
-      <div className="max-w-md rounded-xl border border-amber-200 bg-amber-50 p-6 text-center">
+      <div className="max-w-md rounded-xl border border-amber-200/60 bg-amber-50/60 p-6 text-center">
         <div className="mx-auto mb-4 flex h-12 w-12 items-center justify-center rounded-full bg-amber-100">
-          <svg className="h-6 w-6 text-amber-600" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor">
-            <path strokeLinecap="round" strokeLinejoin="round" d="M12 9v3.75m-9.303 3.376c-.866 1.5.217 3.374 1.948 3.374h14.71c1.73 0 2.813-1.874 1.948-3.374L13.949 3.378c-.866-1.5-3.032-1.5-3.898 0L2.697 16.126ZM12 15.75h.007v.008H12v-.008Z" />
-          </svg>
+          <Warning size={24} weight="regular" className="text-amber-600" />
         </div>
         <h3 className="text-lg font-semibold text-amber-900 mb-2">Shopify non configurato</h3>
         <p className="text-sm text-amber-700 mb-4">
@@ -141,7 +143,7 @@ function SetupInstructions() {
             Modifica il file <code className="bg-amber-100 px-1 rounded text-xs">.env</code> con i tuoi dati:
           </li>
         </ol>
-        <div className="mt-3 rounded-lg bg-gray-900 p-3 text-left">
+        <div className="mt-3 rounded-xl bg-foreground p-3 text-left">
           <code className="text-xs text-green-400">
             SHOPIFY_SHOP_URL=tuo-negozio.myshopify.com<br />
             SHOPIFY_ACCESS_TOKEN=shpat_xxx<br />
@@ -213,11 +215,13 @@ export default function ShopifyDashboard() {
   // Loading
   if (loading && !data) {
     return (
-      <div className="flex h-full items-center justify-center">
-        <div className="text-center">
-          <div className="mx-auto mb-3 h-8 w-8 animate-spin rounded-full border-2 border-green-600 border-t-transparent" />
-          <p className="text-sm text-gray-500">Caricamento dati Shopify...</p>
+      <div className="p-6 space-y-4">
+        <div className="grid grid-cols-2 gap-3">
+          {[...Array(4)].map((_, i) => (
+            <div key={i} className="skeleton-shimmer h-24 rounded-2xl" />
+          ))}
         </div>
+        <div className="skeleton-shimmer h-48 rounded-2xl" />
       </div>
     );
   }
@@ -226,11 +230,11 @@ export default function ShopifyDashboard() {
   if (error && !data) {
     return (
       <div className="flex h-full items-center justify-center p-8">
-        <div className="rounded-xl border border-red-200 bg-red-50 p-6 text-center max-w-sm">
+        <div className="rounded-xl border border-red-200/60 bg-red-50/60 p-6 text-center max-w-sm">
           <p className="text-sm font-medium text-red-800">{error}</p>
           <button
             onClick={() => fetchData(period)}
-            className="mt-3 rounded-lg bg-red-600 px-4 py-1.5 text-sm text-white hover:bg-red-700"
+            className="mt-3 rounded-full bg-red-600 px-4 py-1.5 text-sm text-white hover:bg-red-500 press-scale"
           >
             Riprova
           </button>
@@ -255,12 +259,10 @@ export default function ShopifyDashboard() {
   return (
     <div className="flex h-full flex-col overflow-hidden bg-white">
       {/* Header */}
-      <div className="flex items-center justify-between border-b border-black/5 px-6 py-4 bg-neutral-light/20">
+      <div className="flex items-center justify-between border-b border-black/[0.04] px-6 py-4 bg-neutral-light/30">
         <div className="flex items-center gap-3">
-          <div className="flex h-10 w-10 items-center justify-center rounded-2xl bg-primary/10 shadow-sm border border-primary/20">
-            <svg className="h-5 w-5 text-primary" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor">
-              <path strokeLinecap="round" strokeLinejoin="round" d="M15.75 10.5V6a3.75 3.75 0 1 0-7.5 0v4.5m11.356-1.993 1.263 12c.07.665-.45 1.243-1.119 1.243H4.25a1.125 1.125 0 0 1-1.12-1.243l1.264-12A1.125 1.125 0 0 1 5.513 7.5h12.974c.576 0 1.059.435 1.119 1.007ZM8.625 10.5a.375.375 0 1 1-.75 0 .375.375 0 0 1 .75 0Zm7.5 0a.375.375 0 1 1-.75 0 .375.375 0 0 1 .75 0Z" />
-            </svg>
+          <div className="flex h-10 w-10 items-center justify-center rounded-2xl bg-primary/10 shadow-sm border border-primary/15">
+            <ShoppingBag size={20} weight="regular" className="text-primary" />
           </div>
           <div>
             <h2 className="text-sm font-bold text-foreground">Sales Insights</h2>
@@ -270,7 +272,7 @@ export default function ShopifyDashboard() {
           </div>
         </div>
 
-        <div className="flex items-center gap-1.5 rounded-full bg-black/5 p-1 border border-black/5">
+        <div className="flex items-center gap-1.5 rounded-full bg-black/5 p-1 border border-black/[0.04]">
           {([7, 30, 90] as Period[]).map((p) => (
             <button
               key={p}
@@ -319,27 +321,27 @@ export default function ShopifyDashboard() {
         </div>
 
         {/* New vs Returning Orders */}
-        <div className="rounded-xl border border-gray-200 bg-white p-4">
-          <h3 className="text-sm font-semibold text-gray-700 mb-3">Ordini: Nuovi vs Ricorrenti</h3>
+        <div className="rounded-xl border border-black/[0.05] bg-white p-4">
+          <h3 className="text-sm font-semibold text-foreground mb-3">Ordini: Nuovi vs Ricorrenti</h3>
           <div className="flex items-center gap-6 mb-2">
             <div className="flex items-center gap-2">
-              <div className="h-3 w-3 rounded-full bg-green-500" />
-              <span className="text-xs text-gray-600">
-                Nuovi clienti: <span className="font-semibold text-gray-900">{newOrders}</span>
+              <div className="h-3 w-3 rounded-full bg-primary" />
+              <span className="text-xs text-neutral-dark/70">
+                Nuovi clienti: <span className="font-semibold text-foreground">{newOrders}</span>
               </span>
             </div>
             <div className="flex items-center gap-2">
-              <div className="h-3 w-3 rounded-full bg-blue-500" />
-              <span className="text-xs text-gray-600">
-                Clienti ricorrenti: <span className="font-semibold text-gray-900">{returningOrders}</span>
+              <div className="h-3 w-3 rounded-full bg-secondary" />
+              <span className="text-xs text-neutral-dark/70">
+                Clienti ricorrenti: <span className="font-semibold text-foreground">{returningOrders}</span>
               </span>
             </div>
           </div>
           {totalOrders > 0 && (
             <>
-              <div className="flex h-3 overflow-hidden rounded-full bg-gray-100">
+              <div className="flex h-3 overflow-hidden rounded-full bg-neutral-dark/[0.06]">
                 <div
-                  className="bg-green-500 transition-all duration-300 flex items-center justify-center"
+                  className="bg-primary transition-all duration-300 flex items-center justify-center"
                   style={{ width: `${(newOrders / totalOrders) * 100}%` }}
                 >
                   {newOrders > 0 && (
@@ -349,7 +351,7 @@ export default function ShopifyDashboard() {
                   )}
                 </div>
                 <div
-                  className="bg-blue-500 transition-all duration-300 flex items-center justify-center"
+                  className="bg-secondary transition-all duration-300 flex items-center justify-center"
                   style={{ width: `${(returningOrders / totalOrders) * 100}%` }}
                 >
                   {returningOrders > 0 && (
@@ -364,8 +366,8 @@ export default function ShopifyDashboard() {
         </div>
 
         {/* Pie Chart Revenue per Prodotto */}
-        <div className="rounded-xl border border-gray-200 bg-white p-4">
-          <h3 className="text-sm font-semibold text-gray-700 mb-3">Revenue per Prodotto</h3>
+        <div className="rounded-xl border border-black/[0.05] bg-white p-4">
+          <h3 className="text-sm font-semibold text-foreground mb-3">Revenue per Prodotto</h3>
           <PieChart data={revenueByProduct} />
         </div>
       </div>

@@ -126,20 +126,20 @@ export default function ProductsDashboard() {
   if (loading || !data) {
     return (
       <div className="flex h-full items-center justify-center">
-        <div className="h-6 w-6 animate-spin rounded-full border-2 border-indigo-600 border-t-transparent" />
+        <div className="skeleton-shimmer h-6 w-24" />
       </div>
     );
   }
 
   return (
     <div className="flex h-full flex-col">
-      <div className="flex gap-1 border-b border-gray-200 px-4 pt-3 pb-0">
+      <div className="flex gap-1 border-b border-black/[0.05] px-4 pt-3 pb-0">
         <button
           onClick={() => setTab("stock")}
           className={`px-4 py-2 text-sm font-medium border-b-2 transition-colors ${
             tab === "stock"
-              ? "border-indigo-600 text-indigo-600"
-              : "border-transparent text-gray-500 hover:text-gray-700"
+              ? "border-primary text-primary"
+              : "border-transparent text-neutral-dark/60 hover:text-neutral-dark"
           }`}
         >
           Stock
@@ -148,8 +148,8 @@ export default function ProductsDashboard() {
           onClick={() => setTab("bom")}
           className={`px-4 py-2 text-sm font-medium border-b-2 transition-colors ${
             tab === "bom"
-              ? "border-indigo-600 text-indigo-600"
-              : "border-transparent text-gray-500 hover:text-gray-700"
+              ? "border-primary text-primary"
+              : "border-transparent text-neutral-dark/60 hover:text-neutral-dark"
           }`}
         >
           BOM
@@ -158,8 +158,8 @@ export default function ProductsDashboard() {
           onClick={() => setTab("suppliers")}
           className={`px-4 py-2 text-sm font-medium border-b-2 transition-colors ${
             tab === "suppliers"
-              ? "border-indigo-600 text-indigo-600"
-              : "border-transparent text-gray-500 hover:text-gray-700"
+              ? "border-primary text-primary"
+              : "border-transparent text-neutral-dark/60 hover:text-neutral-dark"
           }`}
         >
           Fornitori
@@ -413,8 +413,8 @@ function StockTab({ data, onChanged }: { data: InventoryData; onChanged: () => v
   if (data.products.length === 0) {
     return (
       <div className="py-12 text-center">
-        <p className="text-sm text-gray-400">Nessun prodotto definito.</p>
-        <p className="text-sm text-gray-400">Vai alla tab BOM per creare prodotti e la loro struttura.</p>
+        <p className="text-sm text-neutral-dark/40">Nessun prodotto definito.</p>
+        <p className="text-sm text-neutral-dark/40">Vai alla tab BOM per creare prodotti e la loro struttura.</p>
       </div>
     );
   }
@@ -423,12 +423,12 @@ function StockTab({ data, onChanged }: { data: InventoryData; onChanged: () => v
 
   return (
     <div className="space-y-3">
-      <h3 className="text-lg font-semibold text-gray-900">Gestione Scorte</h3>
-      <p className="text-sm text-gray-500">Panoramica automatica della capacità produttiva e sincronizzazione con Shopify.</p>
+      <h3 className="text-lg font-semibold text-foreground">Gestione Scorte</h3>
+      <p className="text-sm text-neutral-dark/60">Panoramica automatica della capacità produttiva e sincronizzazione con Shopify.</p>
 
       {isInitLoading && (
         <div className="flex items-center gap-2 rounded-lg bg-blue-50 border border-blue-200 px-3 py-2">
-          <div className="h-4 w-4 animate-spin rounded-full border-2 border-blue-600 border-t-transparent" />
+          <div className="skeleton-shimmer h-4 w-4 rounded-full" />
           <span className="text-sm text-blue-700">Caricamento dati...</span>
         </div>
       )}
@@ -446,10 +446,10 @@ function StockTab({ data, onChanged }: { data: InventoryData; onChanged: () => v
 
       {/* Selection action bar */}
       {selected.size > 0 && (
-        <div className="flex items-center gap-3 rounded-lg border border-gray-200 bg-white px-3 py-2">
+        <div className="flex items-center gap-3 rounded-lg border border-black/[0.05] bg-white px-3 py-2">
           <input
             type="checkbox"
-            className="h-3.5 w-3.5 rounded border-gray-300 accent-blue-600 cursor-pointer"
+            className="h-3.5 w-3.5 rounded border-neutral-dark/15 accent-blue-600 cursor-pointer"
             checked={selected.size === data.products.length}
             onChange={() => {
               if (selected.size === data.products.length) setSelected(new Set());
@@ -459,14 +459,14 @@ function StockTab({ data, onChanged }: { data: InventoryData; onChanged: () => v
           <span className="text-xs font-semibold text-blue-600">{selected.size} selezionat{selected.size === 1 ? "o" : "i"}</span>
           <button
             onClick={handleBatchDelete}
-            className="flex items-center gap-1 rounded px-2 py-1 text-xs text-red-600 hover:bg-red-50 font-medium"
+            className="flex items-center gap-1 rounded-full px-2 py-1 text-xs text-red-600 hover:bg-red-50 font-medium press-scale"
           >
             <svg className="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" d="m14.74 9-.346 9m-4.788 0L9.26 9m9.968-3.21c.342.052.682.107 1.022.166m-1.022-.165L18.16 19.673a2.25 2.25 0 0 1-2.244 2.077H8.084a2.25 2.25 0 0 1-2.244-2.077L4.772 5.79m14.456 0a48.108 48.108 0 0 0-3.478-.397m-12 .562c.34-.059.68-.114 1.022-.165m0 0a48.11 48.11 0 0 1 3.478-.397m7.5 0v-.916c0-1.18-.91-2.164-2.09-2.201a51.964 51.964 0 0 0-3.32 0c-1.18.037-2.09 1.022-2.09 2.201v.916m7.5 0a48.667 48.667 0 0 0-7.5 0" /></svg>
             Elimina
           </button>
           <button
             onClick={() => setSelected(new Set())}
-            className="ml-auto rounded p-1 text-gray-400 hover:text-gray-600"
+            className="ml-auto rounded-full p-1 text-neutral-dark/40 hover:text-neutral-dark/70 press-scale"
           >
             <svg className="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" /></svg>
           </button>
@@ -492,28 +492,28 @@ function StockTab({ data, onChanged }: { data: InventoryData; onChanged: () => v
         const targetQty = hasShopify ? shopifyQty : (desiredStock[p.id] ?? 0);
 
         return (
-          <div key={p.id} className={`rounded-lg border overflow-hidden ${selected.has(p.id) ? "border-blue-300 bg-blue-50/30" : "border-gray-200 bg-white"}`}>
+          <div key={p.id} className={`rounded-lg border overflow-hidden ${selected.has(p.id) ? "border-blue-300 bg-blue-50/30" : "border-black/[0.05] bg-white"}`}>
             {/* --- HEADER --- */}
-            <div className="px-4 py-3 bg-gray-50 space-y-1">
+            <div className="px-4 py-3 bg-neutral-light/50 space-y-1">
               <div className="flex items-center gap-3">
                 <input
                   type="checkbox"
-                  className="h-3.5 w-3.5 rounded border-gray-300 accent-blue-600 cursor-pointer shrink-0"
+                  className="h-3.5 w-3.5 rounded border-neutral-dark/15 accent-blue-600 cursor-pointer shrink-0"
                   checked={selected.has(p.id)}
                   onChange={() => toggleSelect(p.id)}
                 />
-                <button onClick={() => toggleExpand(p.id)} className="text-gray-400 hover:text-gray-600">
+                <button onClick={() => toggleExpand(p.id)} className="text-neutral-dark/40 hover:text-neutral-dark/70 press-scale">
                   <svg className={`h-4 w-4 transition-transform ${isExpanded ? "rotate-90" : ""}`} fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor">
                     <path strokeLinecap="round" strokeLinejoin="round" d="m8.25 4.5 7.5 7.5-7.5 7.5" />
                   </svg>
                 </button>
-                <span className="font-medium text-gray-900">{p.name}</span>
+                <span className="font-medium text-foreground">{p.name}</span>
                 <div className="flex-1" />
 
                 {/* Shopify badge */}
                 {hasShopify && (
                   <div className="flex flex-col items-center">
-                    <span className="text-[10px] uppercase text-gray-400 leading-tight">Shopify</span>
+                    <span className="text-[10px] uppercase text-neutral-dark/40 leading-tight">Shopify</span>
                     <span className="inline-flex items-center gap-1 rounded-full bg-green-100 px-2.5 py-0.5 text-sm font-semibold text-green-700">
                       <svg className="h-3 w-3" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor">
                         <path strokeLinecap="round" strokeLinejoin="round" d="M13.5 21v-7.5a.75.75 0 0 1 .75-.75h3a.75.75 0 0 1 .75.75V21m-4.5 0H2.36m11.14 0H18m0 0h3.64m-1.39 0V9.349M3.75 21V9.349m0 0a3.001 3.001 0 0 0 3.75-.615A2.993 2.993 0 0 0 9.75 9.75c.896 0 1.7-.393 2.25-1.016a2.993 2.993 0 0 0 2.25 1.016c.896 0 1.7-.393 2.25-1.015a3.001 3.001 0 0 0 3.75.614m-16.5 0a3.004 3.004 0 0 1-.621-4.72l1.189-1.19A1.5 1.5 0 0 1 5.378 3h13.243a1.5 1.5 0 0 1 1.06.44l1.19 1.189a3 3 0 0 1-.621 4.72M6.75 18h3.75a.75.75 0 0 0 .75-.75V13.5a.75.75 0 0 0-.75-.75H6.75a.75.75 0 0 0-.75.75v3.75c0 .414.336.75.75.75Z" />
@@ -525,9 +525,9 @@ function StockTab({ data, onChanged }: { data: InventoryData; onChanged: () => v
 
                 {/* Producibili badge */}
                 <div className="flex flex-col items-center">
-                  <span className="text-[10px] uppercase text-gray-400 leading-tight">Producibili</span>
+                  <span className="text-[10px] uppercase text-neutral-dark/40 leading-tight">Producibili</span>
                   {isInitLoading ? (
-                    <div className="h-5 w-5 animate-spin rounded-full border-2 border-indigo-400 border-t-transparent" />
+                    <div className="skeleton-shimmer h-5 w-12 rounded-full" />
                   ) : (
                     <span className={`inline-flex items-center rounded-full px-2.5 py-0.5 text-sm font-semibold ${
                       needsCatchUp
@@ -549,14 +549,14 @@ function StockTab({ data, onChanged }: { data: InventoryData; onChanged: () => v
                   </span>
                 )}
                 {!isInitLoading && hasShopify && !needsCatchUp && (
-                  <span className="rounded-full bg-gray-100 px-3 py-1 text-sm font-medium text-gray-600">
+                  <span className="rounded-full bg-neutral-dark/[0.06] px-3 py-1 text-sm font-medium text-neutral-dark/70">
                     Next Restock
                   </span>
                 )}
 
                 {!isInitLoading && hasShopify && !needsCatchUp && (
                   <div className="flex flex-col items-center">
-                    <span className="text-[10px] uppercase text-gray-400 leading-tight">Prossimo Drop</span>
+                    <span className="text-[10px] uppercase text-neutral-dark/40 leading-tight">Prossimo Drop</span>
                     <input
                       type="number" min={0}
                       value={desiredStock[p.id] ?? ""}
@@ -570,7 +570,7 @@ function StockTab({ data, onChanged }: { data: InventoryData; onChanged: () => v
                         handleDesiredStockSave(p.id, val);
                       }}
                       onKeyDown={(e) => { if (e.key === "Enter") (e.target as HTMLInputElement).blur(); }}
-                      className="w-20 rounded border border-gray-300 px-2 py-0.5 text-sm text-center"
+                      className="w-20 rounded border border-neutral-dark/15 px-2 py-0.5 text-sm text-center focus:ring-primary/20 focus:border-primary/40"
                     />
                   </div>
                 )}
@@ -579,7 +579,7 @@ function StockTab({ data, onChanged }: { data: InventoryData; onChanged: () => v
                 {!isInitLoading && !hasShopify && (
                   <div className="flex items-center gap-2">
                     <div className="flex flex-col items-center">
-                      <span className="text-[10px] uppercase text-gray-400 leading-tight">Qty desiderata</span>
+                      <span className="text-[10px] uppercase text-neutral-dark/40 leading-tight">Qty desiderata</span>
                       <div className="flex items-center gap-1">
                         <input
                           type="number" min={0}
@@ -590,7 +590,7 @@ function StockTab({ data, onChanged }: { data: InventoryData; onChanged: () => v
                             setDesiredStock((prev) => ({ ...prev, [p.id]: val }));
                           }}
                           onKeyDown={(e) => { if (e.key === "Enter") (e.target as HTMLInputElement).blur(); }}
-                          className="w-20 rounded border border-gray-300 px-2 py-0.5 text-sm text-center"
+                          className="w-20 rounded border border-neutral-dark/15 px-2 py-0.5 text-sm text-center focus:ring-primary/20 focus:border-primary/40"
                         />
                         <button
                           onClick={() => {
@@ -600,7 +600,7 @@ function StockTab({ data, onChanged }: { data: InventoryData; onChanged: () => v
                             }
                           }}
                           disabled={!desiredStock[p.id] || (desiredStock[p.id] ?? 0) < 1 || isLoading}
-                          className="rounded bg-indigo-600 px-3 py-1 text-xs font-medium text-white hover:bg-indigo-700 disabled:opacity-50"
+                          className="rounded-full bg-primary px-3 py-1 text-xs font-medium text-white hover:bg-primary/90 disabled:opacity-50 press-scale"
                         >
                           {isLoading ? "..." : "Calcola"}
                         </button>
@@ -629,7 +629,7 @@ function StockTab({ data, onChanged }: { data: InventoryData; onChanged: () => v
                     <button
                       onClick={() => handleCreateRestockGantt(line.name, row.item.restock_workflow)}
                       disabled={!row.item.restock_workflow}
-                      className="rounded-lg bg-red-100 p-1.5 hover:bg-red-200 disabled:opacity-40 transition-colors"
+                      className="rounded-lg bg-red-100 p-1.5 hover:bg-red-200 disabled:opacity-40 transition-colors press-scale"
                       title={row.item.restock_workflow ? "Crea sezione Gantt per restock" : "Nessun workflow di restock assegnato"}
                     >
                       <svg className="h-4 w-4 text-red-600" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor">
@@ -656,10 +656,10 @@ function StockTab({ data, onChanged }: { data: InventoryData; onChanged: () => v
               );
 
               const groupRow = (row: StockBomRow, colSpan: number) => (
-                <tr key={`group-${row.item.id}`} className="bg-gray-50">
+                <tr key={`group-${row.item.id}`} className="bg-neutral-light/50">
                   <td
                     colSpan={colSpan}
-                    className="py-1.5 font-semibold text-gray-600 text-xs uppercase tracking-wide"
+                    className="py-1.5 font-semibold text-neutral-dark/70 text-xs uppercase tracking-wide"
                     style={{ paddingLeft: `${12 + row.depth * 20}px` }}
                   >
                     {row.item.name}
@@ -670,10 +670,10 @@ function StockTab({ data, onChanged }: { data: InventoryData; onChanged: () => v
               if (needsCatchUp) {
                 /* ---- CATCH UP TABLE ---- */
                 return (
-                <div className="border-t border-gray-100 p-4 space-y-3">
-                  <div className="overflow-x-auto rounded-lg border border-gray-200">
+                <div className="border-t border-black/[0.03] p-4 space-y-3">
+                  <div className="overflow-x-auto rounded-lg border border-black/[0.05]">
                     <table className="w-full text-sm">
-                      <thead className="bg-gray-50 text-left text-xs uppercase text-gray-500">
+                      <thead className="bg-neutral-light/50 text-left text-xs uppercase text-neutral-dark/60">
                         <tr>
                           <th className="px-3 py-2">Component</th>
                           <th className="px-3 py-2 text-center">Required</th>
@@ -684,7 +684,7 @@ function StockTab({ data, onChanged }: { data: InventoryData; onChanged: () => v
                           <th className="px-3 py-2 text-center">Restock</th>
                         </tr>
                       </thead>
-                      <tbody className="divide-y divide-gray-100">
+                      <tbody className="divide-y divide-black/[0.03]">
                         {stockRows.map((row) => {
                           if (!row.isLeaf) return groupRow(row, 7);
                           const line = row.line!;
@@ -693,7 +693,7 @@ function StockTab({ data, onChanged }: { data: InventoryData; onChanged: () => v
                           const missingCost = missing * line.unit_cost;
                           return (
                             <tr key={line.component_id} className={missing > 0 ? "bg-red-50" : ""}>
-                              <td className="py-2 font-medium text-gray-900" style={{ paddingLeft: `${12 + row.depth * 20}px` }}>
+                              <td className="py-2 font-medium text-foreground" style={{ paddingLeft: `${12 + row.depth * 20}px` }}>
                                 {line.name}
                               </td>
                               <td className="px-3 py-2 text-center">{line.needed}</td>
@@ -703,14 +703,14 @@ function StockTab({ data, onChanged }: { data: InventoryData; onChanged: () => v
                                   onChange={(e) => setLocalStock((prev) => ({ ...prev, [line.component_id]: Number(e.target.value) }))}
                                   onBlur={(e) => handleStockSave(p.id, line.component_id, Number(e.target.value))}
                                   onKeyDown={(e) => { if (e.key === "Enter") (e.target as HTMLInputElement).blur(); }}
-                                  className="w-20 rounded border border-gray-300 px-2 py-1 text-sm text-center"
+                                  className="w-20 rounded border border-neutral-dark/15 px-2 py-1 text-sm text-center focus:ring-primary/20 focus:border-primary/40"
                                 />
                               </td>
                               <td className="px-3 py-2 text-center">
                                 {missing > 0 ? <span className="font-medium text-red-700">{missing}</span> : <span className="text-green-600">0</span>}
                               </td>
-                              <td className="px-3 py-2 text-right text-gray-500">{missingCost > 0 ? `${missingCost.toFixed(0)}€` : "—"}</td>
-                              <td className="px-3 py-2 text-gray-500">{line.supplier || "—"}</td>
+                              <td className="px-3 py-2 text-right text-neutral-dark/60">{missingCost > 0 ? `${missingCost.toFixed(0)}€` : "—"}</td>
+                              <td className="px-3 py-2 text-neutral-dark/60">{line.supplier || "—"}</td>
                               {restockButtons(row, line)}
                             </tr>
                           );
@@ -738,10 +738,10 @@ function StockTab({ data, onChanged }: { data: InventoryData; onChanged: () => v
               } else {
                 /* ---- NEXT RESTOCK TABLE ---- */
                 return (
-                <div className="border-t border-gray-100 p-4 space-y-3">
-                  <div className="overflow-x-auto rounded-lg border border-gray-200">
+                <div className="border-t border-black/[0.03] p-4 space-y-3">
+                  <div className="overflow-x-auto rounded-lg border border-black/[0.05]">
                     <table className="w-full text-sm">
-                      <thead className="bg-gray-50 text-left text-xs uppercase text-gray-500">
+                      <thead className="bg-neutral-light/50 text-left text-xs uppercase text-neutral-dark/60">
                         <tr>
                           <th className="px-3 py-2">Component</th>
                           <th className="px-3 py-2 text-center">Available</th>
@@ -752,7 +752,7 @@ function StockTab({ data, onChanged }: { data: InventoryData; onChanged: () => v
                           <th className="px-3 py-2 text-center">Restock</th>
                         </tr>
                       </thead>
-                      <tbody className="divide-y divide-gray-100">
+                      <tbody className="divide-y divide-black/[0.03]">
                         {stockRows.map((row) => {
                           if (!row.isLeaf) return groupRow(row, 7);
                           const line = row.line!;
@@ -761,7 +761,7 @@ function StockTab({ data, onChanged }: { data: InventoryData; onChanged: () => v
                           const missingCost = missing * line.unit_cost;
                           return (
                             <tr key={line.component_id} className={missing > 0 ? "bg-red-50" : ""}>
-                              <td className="py-2 font-medium text-gray-900" style={{ paddingLeft: `${12 + row.depth * 20}px` }}>
+                              <td className="py-2 font-medium text-foreground" style={{ paddingLeft: `${12 + row.depth * 20}px` }}>
                                 {line.name}
                               </td>
                               <td className="px-3 py-2 text-center">
@@ -770,15 +770,15 @@ function StockTab({ data, onChanged }: { data: InventoryData; onChanged: () => v
                                   onChange={(e) => setLocalStock((prev) => ({ ...prev, [line.component_id]: Number(e.target.value) }))}
                                   onBlur={(e) => handleStockSave(p.id, line.component_id, Number(e.target.value))}
                                   onKeyDown={(e) => { if (e.key === "Enter") (e.target as HTMLInputElement).blur(); }}
-                                  className="w-20 rounded border border-gray-300 px-2 py-1 text-sm text-center"
+                                  className="w-20 rounded border border-neutral-dark/15 px-2 py-1 text-sm text-center focus:ring-primary/20 focus:border-primary/40"
                                 />
                               </td>
                               <td className="px-3 py-2 text-center">{line.needed}</td>
                               <td className="px-3 py-2 text-center">
                                 {missing > 0 ? <span className="font-medium text-red-700">{missing}</span> : <span className="text-green-600">0</span>}
                               </td>
-                              <td className="px-3 py-2 text-right text-gray-500">{missingCost > 0 ? `${missingCost.toFixed(0)}€` : "—"}</td>
-                              <td className="px-3 py-2 text-gray-500">{line.supplier || "—"}</td>
+                              <td className="px-3 py-2 text-right text-neutral-dark/60">{missingCost > 0 ? `${missingCost.toFixed(0)}€` : "—"}</td>
+                              <td className="px-3 py-2 text-neutral-dark/60">{line.supplier || "—"}</td>
                               {restockButtons(row, line)}
                             </tr>
                           );
@@ -815,7 +815,7 @@ function StockTab({ data, onChanged }: { data: InventoryData; onChanged: () => v
             })()}
 
             {isExpanded && !result && !isInitLoading && (
-              <div className="border-t border-gray-100 p-4 text-center text-sm text-gray-400">
+              <div className="border-t border-black/[0.03] p-4 text-center text-sm text-neutral-dark/40">
                 {hasShopify ? "Caricamento dettagli..." : "Imposta una quantità desiderata e premi \"Calcola\"."}
               </div>
             )}
@@ -837,10 +837,10 @@ function SuppliersTab({ data, onChanged }: { data: InventoryData; onChanged: () 
 
   useEffect(() => { setLocalSuppliers(data.suppliers); }, [data.suppliers]);
 
-  const handleUpdate = async (name: string, field: "phone" | "email", value: string) => {
-    setLocalSuppliers((prev) => prev.map((s) => s.name === name ? { ...s, [field]: value } : s));
+  const handleUpdate = async (name: string, field: string, value: string | number | null) => {
+    setLocalSuppliers((prev) => prev.map((s) => s.name === name ? { ...s, [field]: value } as Supplier : s));
     try {
-      await updateSupplier(name, { [field]: value });
+      await updateSupplier(name, { [field]: value } as Partial<Omit<Supplier, "name">>);
       onChanged();
     } catch { /* ignore */ }
   };
@@ -868,24 +868,38 @@ function SuppliersTab({ data, onChanged }: { data: InventoryData; onChanged: () 
 
   return (
     <div className="space-y-3">
-      <h3 className="text-lg font-semibold text-gray-900">Fornitori</h3>
-      <p className="text-sm text-gray-500">Gestisci i fornitori con i relativi contatti.</p>
+      <h3 className="text-lg font-semibold text-foreground">Fornitori</h3>
+      <p className="text-sm text-neutral-dark/60">Gestisci i fornitori con i relativi contatti.</p>
 
-      <div className="overflow-x-auto rounded-lg border border-gray-200 bg-white">
+      <div className="overflow-x-auto rounded-lg border border-black/[0.05] bg-white">
         <table className="w-full text-sm">
-          <thead className="bg-gray-50 text-left text-xs uppercase text-gray-500">
+          <thead className="bg-neutral-light/50 text-left text-xs uppercase text-neutral-dark/60">
             <tr>
-              <th className="px-4 py-2.5">Nome</th>
-              <th className="px-4 py-2.5">Telefono</th>
-              <th className="px-4 py-2.5">Email</th>
-              <th className="px-4 py-2.5 w-12"></th>
+              <th className="px-3 py-2.5">Nome</th>
+              <th className="px-3 py-2.5">Contatto</th>
+              <th className="px-3 py-2.5">Telefono</th>
+              <th className="px-3 py-2.5">Email</th>
+              <th className="px-3 py-2.5">Canale</th>
+              <th className="px-3 py-2.5 text-center">LT (gg)</th>
+              <th className="px-3 py-2.5 text-center">MOQ</th>
+              <th className="px-3 py-2.5 w-10"></th>
             </tr>
           </thead>
-          <tbody className="divide-y divide-gray-100">
+          <tbody className="divide-y divide-black/[0.03]">
             {localSuppliers.map((s) => (
-              <tr key={s.name} className="hover:bg-gray-50">
-                <td className="px-4 py-2 font-medium text-gray-900">{s.name}</td>
-                <td className="px-4 py-2">
+              <tr key={s.name} className="hover:bg-black/[0.03]">
+                <td className="px-3 py-2 font-medium text-foreground text-xs">{s.name}</td>
+                <td className="px-3 py-2">
+                  <input
+                    value={s.contact_person || ""}
+                    onChange={(e) => setLocalSuppliers((prev) => prev.map((x) => x.name === s.name ? { ...x, contact_person: e.target.value } : x))}
+                    onBlur={(e) => handleUpdate(s.name, "contact_person", e.target.value)}
+                    onKeyDown={(e) => { if (e.key === "Enter") (e.target as HTMLInputElement).blur(); }}
+                    placeholder="—"
+                    className="w-full rounded border border-neutral-dark/15 px-2 py-1 text-xs focus:ring-primary/20 focus:border-primary/40"
+                  />
+                </td>
+                <td className="px-3 py-2">
                   <input
                     type="tel"
                     value={s.phone}
@@ -893,10 +907,10 @@ function SuppliersTab({ data, onChanged }: { data: InventoryData; onChanged: () 
                     onBlur={(e) => handleUpdate(s.name, "phone", e.target.value)}
                     onKeyDown={(e) => { if (e.key === "Enter") (e.target as HTMLInputElement).blur(); }}
                     placeholder="—"
-                    className="w-full rounded border border-gray-300 px-2 py-1 text-sm"
+                    className="w-full rounded border border-neutral-dark/15 px-2 py-1 text-xs focus:ring-primary/20 focus:border-primary/40"
                   />
                 </td>
-                <td className="px-4 py-2">
+                <td className="px-3 py-2">
                   <input
                     type="email"
                     value={s.email}
@@ -904,13 +918,49 @@ function SuppliersTab({ data, onChanged }: { data: InventoryData; onChanged: () 
                     onBlur={(e) => handleUpdate(s.name, "email", e.target.value)}
                     onKeyDown={(e) => { if (e.key === "Enter") (e.target as HTMLInputElement).blur(); }}
                     placeholder="—"
-                    className="w-full rounded border border-gray-300 px-2 py-1 text-sm"
+                    className="w-full rounded border border-neutral-dark/15 px-2 py-1 text-xs focus:ring-primary/20 focus:border-primary/40"
                   />
                 </td>
-                <td className="px-4 py-2 text-center">
+                <td className="px-3 py-2">
+                  <select
+                    value={s.channel_type || "email"}
+                    onChange={(e) => { handleUpdate(s.name, "channel_type", e.target.value); }}
+                    className="w-full rounded border border-neutral-dark/15 px-2 py-1 text-xs focus:ring-primary/20 focus:border-primary/40 bg-white"
+                  >
+                    <option value="email">Email</option>
+                    <option value="ecommerce_portal">Portale</option>
+                    <option value="whatsapp">WhatsApp</option>
+                    <option value="other">Altro</option>
+                  </select>
+                </td>
+                <td className="px-3 py-2">
+                  <input
+                    type="number"
+                    min={0}
+                    value={s.default_lead_time ?? ""}
+                    onChange={(e) => setLocalSuppliers((prev) => prev.map((x) => x.name === s.name ? { ...x, default_lead_time: e.target.value ? parseInt(e.target.value) : null } : x))}
+                    onBlur={(e) => handleUpdate(s.name, "default_lead_time", e.target.value ? parseInt(e.target.value) : null)}
+                    onKeyDown={(e) => { if (e.key === "Enter") (e.target as HTMLInputElement).blur(); }}
+                    placeholder="—"
+                    className="w-16 rounded border border-neutral-dark/15 px-2 py-1 text-xs text-center focus:ring-primary/20 focus:border-primary/40"
+                  />
+                </td>
+                <td className="px-3 py-2">
+                  <input
+                    type="number"
+                    min={1}
+                    value={s.default_moq ?? ""}
+                    onChange={(e) => setLocalSuppliers((prev) => prev.map((x) => x.name === s.name ? { ...x, default_moq: e.target.value ? parseInt(e.target.value) : null } : x))}
+                    onBlur={(e) => handleUpdate(s.name, "default_moq", e.target.value ? parseInt(e.target.value) : null)}
+                    onKeyDown={(e) => { if (e.key === "Enter") (e.target as HTMLInputElement).blur(); }}
+                    placeholder="—"
+                    className="w-16 rounded border border-neutral-dark/15 px-2 py-1 text-xs text-center focus:ring-primary/20 focus:border-primary/40"
+                  />
+                </td>
+                <td className="px-3 py-2 text-center">
                   <button
                     onClick={() => handleDelete(s.name)}
-                    className="text-gray-400 hover:text-red-600"
+                    className="text-neutral-dark/40 hover:text-red-600 press-scale"
                     title="Elimina fornitore"
                   >
                     <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor">
@@ -927,7 +977,7 @@ function SuppliersTab({ data, onChanged }: { data: InventoryData; onChanged: () 
       {!adding ? (
         <button
           onClick={() => setAdding(true)}
-          className="flex items-center gap-1 rounded-lg border border-dashed border-gray-300 px-4 py-2 text-sm text-gray-500 hover:border-indigo-400 hover:text-indigo-600"
+          className="flex items-center gap-1 rounded-full border border-dashed border-neutral-dark/15 px-4 py-2 text-sm text-neutral-dark/60 hover:border-primary/40 hover:text-primary press-scale"
         >
           <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor">
             <path strokeLinecap="round" strokeLinejoin="round" d="M12 4.5v15m7.5-7.5h-15" />
@@ -941,13 +991,13 @@ function SuppliersTab({ data, onChanged }: { data: InventoryData; onChanged: () 
             onChange={(e) => setNewName(e.target.value)}
             onKeyDown={(e) => { if (e.key === "Enter") handleAdd(); if (e.key === "Escape") { setAdding(false); setNewName(""); } }}
             placeholder="Nome fornitore"
-            className="rounded border border-gray-300 px-3 py-1.5 text-sm"
+            className="rounded border border-neutral-dark/15 px-3 py-1.5 text-sm focus:ring-primary/20 focus:border-primary/40"
             autoFocus
           />
-          <button onClick={handleAdd} className="rounded bg-indigo-600 px-3 py-1.5 text-xs font-medium text-white hover:bg-indigo-700">
+          <button onClick={handleAdd} className="rounded-full bg-primary px-3 py-1.5 text-xs font-medium text-white hover:bg-primary/90 press-scale">
             Aggiungi
           </button>
-          <button onClick={() => { setAdding(false); setNewName(""); }} className="rounded px-3 py-1.5 text-xs text-gray-500 hover:text-gray-700">
+          <button onClick={() => { setAdding(false); setNewName(""); }} className="rounded-full px-3 py-1.5 text-xs text-neutral-dark/60 hover:text-neutral-dark press-scale">
             Annulla
           </button>
         </div>
@@ -972,10 +1022,10 @@ function BomTab({ data, onChanged }: { data: InventoryData; onChanged: () => voi
     <div className="flex h-full flex-col">
       {/* Header with template manager button */}
       <div className="flex items-center justify-between px-1 pt-1 pb-2 shrink-0">
-        <h3 className="text-lg font-semibold text-gray-900">Distinta Base (BOM)</h3>
+        <h3 className="text-lg font-semibold text-foreground">Distinta Base (BOM)</h3>
         <button
           onClick={() => setShowTemplateManager(true)}
-          className="rounded-lg border border-gray-300 px-3 py-1.5 text-sm font-medium text-gray-600 hover:bg-gray-100"
+          className="rounded-full border border-neutral-dark/15 px-3 py-1.5 text-sm font-medium text-neutral-dark/70 hover:bg-black/[0.04] press-scale"
         >
           Template Workflow
         </button>
@@ -1005,6 +1055,8 @@ export interface ItemFormData {
   quantity: number;
   supplier: string;
   unit_cost: number;
+  moq: number;
+  sku: string;
 }
 
 export function ItemForm({
@@ -1022,19 +1074,25 @@ export function ItemForm({
       <div className="flex gap-2 flex-wrap">
         <input value={form.name} onChange={(e) => setForm({ ...form, name: e.target.value })}
           onKeyDown={(e) => { if (e.key === "Enter") onSave(); if (e.key === "Escape") onCancel(); }}
-          placeholder="Nome" className="flex-1 min-w-[120px] rounded border border-gray-300 px-2 py-1.5 text-sm" autoFocus />
+          placeholder="Nome" className="flex-1 min-w-[120px] rounded border border-neutral-dark/15 px-2 py-1.5 text-sm focus:ring-primary/20 focus:border-primary/40" autoFocus />
         <input type="number" min={1} step={1} value={form.quantity}
           onChange={(e) => setForm({ ...form, quantity: Math.max(1, Math.round(Number(e.target.value))) })}
-          className="w-16 rounded border border-gray-300 px-2 py-1.5 text-sm text-center" title="Quantità (pezzi)" />
+          className="w-16 rounded border border-neutral-dark/15 px-2 py-1.5 text-sm text-center focus:ring-primary/20 focus:border-primary/40" title="Quantità (pezzi)" />
         <SupplierDropdown value={form.supplier} suppliers={suppliers}
           onChange={(v) => setForm({ ...form, supplier: v })} onAddNew={onAddSupplier} />
         <input type="number" min={0} step={0.01} value={form.unit_cost}
           onChange={(e) => setForm({ ...form, unit_cost: Number(e.target.value) })}
-          placeholder="€" className="w-20 rounded border border-gray-300 px-2 py-1.5 text-sm text-center" title="Costo unitario (€)" />
+          placeholder="€" className="w-20 rounded border border-neutral-dark/15 px-2 py-1.5 text-sm text-center focus:ring-primary/20 focus:border-primary/40" title="Costo unitario (€)" />
+        <input type="number" min={1} step={1} value={form.moq}
+          onChange={(e) => setForm({ ...form, moq: Math.max(1, Math.round(Number(e.target.value))) })}
+          className="w-16 rounded border border-neutral-dark/15 px-2 py-1.5 text-sm text-center focus:ring-primary/20 focus:border-primary/40" title="MOQ" placeholder="MOQ" />
+        <input value={form.sku}
+          onChange={(e) => setForm({ ...form, sku: e.target.value })}
+          placeholder="SKU" className="w-24 rounded border border-neutral-dark/15 px-2 py-1.5 text-sm focus:ring-primary/20 focus:border-primary/40" title="Codice interno (SKU)" />
       </div>
       <div className="flex gap-2">
-        <button onClick={onSave} className="rounded bg-indigo-600 px-3 py-1 text-xs text-white hover:bg-indigo-700">Salva</button>
-        <button onClick={onCancel} className="rounded border px-3 py-1 text-xs text-gray-600 hover:bg-gray-100">Annulla</button>
+        <button onClick={onSave} className="rounded-full bg-primary px-3 py-1 text-xs text-white hover:bg-primary/90 press-scale">Salva</button>
+        <button onClick={onCancel} className="rounded-full border px-3 py-1 text-xs text-neutral-dark/70 hover:bg-black/[0.04] press-scale">Annulla</button>
       </div>
     </div>
   );
@@ -1095,27 +1153,27 @@ export function SupplierDropdown({
         onChange={(e) => { setFilter(e.target.value); setOpen(true); }}
         onFocus={() => setOpen(true)}
         placeholder="Fornitore"
-        className="w-full rounded border border-gray-300 px-2 py-1.5 text-sm"
+        className="w-full rounded border border-neutral-dark/15 px-2 py-1.5 text-sm focus:ring-primary/20 focus:border-primary/40"
       />
       {open && (
-        <div className="absolute z-20 top-full left-0 mt-1 w-full max-h-40 overflow-y-auto rounded-lg border border-gray-200 bg-white shadow-lg">
+        <div className="absolute z-20 top-full left-0 mt-1 w-full max-h-40 overflow-y-auto rounded-lg border border-black/[0.05] bg-white shadow-lg">
           {filtered.map((s) => (
             <button key={s} onClick={() => handleSelect(s)}
-              className="w-full px-3 py-1.5 text-left text-sm hover:bg-indigo-50 truncate">
+              className="w-full px-3 py-1.5 text-left text-sm hover:bg-primary/10 truncate">
               {s}
             </button>
           ))}
           {!adding ? (
             <button onClick={() => setAdding(true)}
-              className="w-full px-3 py-1.5 text-left text-sm text-indigo-600 hover:bg-indigo-50 font-medium">
+              className="w-full px-3 py-1.5 text-left text-sm text-primary hover:bg-primary/10 font-medium">
               + Aggiungi nuovo
             </button>
           ) : (
             <div className="px-2 py-1.5 flex gap-1">
               <input value={filter} onChange={(e) => setFilter(e.target.value)}
                 onKeyDown={(e) => { if (e.key === "Enter") handleAddNew(); }}
-                placeholder="Nome fornitore" className="flex-1 rounded border border-gray-300 px-2 py-1 text-xs" autoFocus />
-              <button onClick={handleAddNew} className="rounded bg-indigo-600 px-2 py-1 text-xs text-white hover:bg-indigo-700">+</button>
+                placeholder="Nome fornitore" className="flex-1 rounded border border-neutral-dark/15 px-2 py-1 text-xs focus:ring-primary/20 focus:border-primary/40" autoFocus />
+              <button onClick={handleAddNew} className="rounded-full bg-primary px-2 py-1 text-xs text-white hover:bg-primary/90 press-scale">+</button>
             </div>
           )}
         </div>
@@ -1149,7 +1207,7 @@ function WorkflowSummaryRow({
 
   return (
     <div
-      className={`flex items-center gap-2 px-2 py-1 ${inline ? "" : "border-b border-gray-50"}`}
+      className={`flex items-center gap-2 px-2 py-1 ${inline ? "" : "border-b border-black/[0.03]"}`}
       style={inline ? undefined : { paddingLeft: `${44 + depth * 24}px` }}
     >
       {hasWorkflow ? (
@@ -1165,19 +1223,19 @@ function WorkflowSummaryRow({
               </span>
             ))}
           </div>
-          <span className="text-xs text-gray-400 shrink-0">
+          <span className="text-xs text-neutral-dark/40 shrink-0">
             Lead: {leadTime}gg
           </span>
           <div className="ml-auto flex gap-1 shrink-0">
             <button
               onClick={onOpenEditor}
-              className="rounded px-2 py-0.5 text-[10px] font-medium text-blue-600 hover:bg-blue-50 border border-blue-200"
+              className="rounded-full px-2 py-0.5 text-[10px] font-medium text-blue-600 hover:bg-blue-50 border border-blue-200 press-scale"
             >
               Modifica
             </button>
             <button
               onClick={onRemoveWorkflow}
-              className="rounded px-2 py-0.5 text-[10px] font-medium text-red-500 hover:bg-red-50 border border-red-200"
+              className="rounded-full px-2 py-0.5 text-[10px] font-medium text-red-500 hover:bg-red-50 border border-red-200 press-scale"
             >
               Rimuovi
             </button>
@@ -1185,10 +1243,10 @@ function WorkflowSummaryRow({
         </>
       ) : (
         <>
-          <span className="text-[10px] text-gray-400 italic">Nessun workflow</span>
+          <span className="text-[10px] text-neutral-dark/40 italic">Nessun workflow</span>
           <button
             onClick={onOpenEditor}
-            className="rounded px-2 py-0.5 text-[10px] font-medium text-blue-600 hover:bg-blue-50 border border-blue-200"
+            className="rounded-full px-2 py-0.5 text-[10px] font-medium text-blue-600 hover:bg-blue-50 border border-blue-200 press-scale"
           >
             Assegna workflow
           </button>
@@ -1365,19 +1423,19 @@ export function RestockWorkflowEditor({
   if (!hasWorkflow && phases.length === 0) {
     return (
       <div className="space-y-2">
-        <p className="text-xs text-gray-500">Workflow di riapprovvigionamento</p>
+        <p className="text-xs text-neutral-dark/60">Workflow di riapprovvigionamento</p>
         <div className="flex gap-2 flex-wrap items-center">
           {templates.length > 0 && (
             <select onChange={(e) => {
               const tpl = templates.find((t) => t.id === e.target.value);
               if (tpl) applyTemplate(tpl);
-            }} defaultValue="" className="rounded border border-gray-300 px-2 py-1.5 text-sm">
+            }} defaultValue="" className="rounded border border-neutral-dark/15 px-2 py-1.5 text-sm focus:ring-primary/20 focus:border-primary/40">
               <option value="" disabled>Seleziona template...</option>
               {templates.map((t) => <option key={t.id} value={t.id}>{t.name}</option>)}
             </select>
           )}
-          <button onClick={addPhase} className="rounded bg-blue-600 px-3 py-1.5 text-xs text-white hover:bg-blue-700">Crea da zero</button>
-          <button onClick={onCancel} className="rounded border px-3 py-1.5 text-xs text-gray-600 hover:bg-gray-100">Chiudi</button>
+          <button onClick={addPhase} className="rounded-full bg-blue-600 px-3 py-1.5 text-xs text-white hover:bg-blue-700 press-scale">Crea da zero</button>
+          <button onClick={onCancel} className="rounded-full border px-3 py-1.5 text-xs text-neutral-dark/70 hover:bg-black/[0.04] press-scale">Chiudi</button>
         </div>
       </div>
     );
@@ -1386,8 +1444,8 @@ export function RestockWorkflowEditor({
   return (
     <div className="space-y-3">
       <div className="flex items-center justify-between">
-        <p className="text-xs font-semibold text-gray-700 uppercase tracking-wider">Fasi del Workflow</p>
-        <span className="text-xs text-gray-400">Lead time: {computeLeadTimeDays({ phases })}gg</span>
+        <p className="text-xs font-semibold text-neutral-dark uppercase tracking-wider">Fasi del Workflow</p>
+        <span className="text-xs text-neutral-dark/40">Lead time: {computeLeadTimeDays({ phases })}gg</span>
       </div>
 
       {/* Phase columns */}
@@ -1415,8 +1473,8 @@ export function RestockWorkflowEditor({
                 <div key={task.id}>
                   {tIdx > 0 && (
                     <div className="flex flex-col items-center py-0.5">
-                      <div className="w-0.5 h-2 bg-gray-300 rounded-full" />
-                      <svg className="h-1.5 w-2 text-gray-300" viewBox="0 0 10 6"><path d="M5 6L0 0h10z" fill="currentColor" /></svg>
+                      <div className="w-0.5 h-2 bg-neutral-dark/30 rounded-full" />
+                      <svg className="h-1.5 w-2 text-neutral-dark/30" viewBox="0 0 10 6"><path d="M5 6L0 0h10z" fill="currentColor" /></svg>
                     </div>
                   )}
 
@@ -1428,13 +1486,13 @@ export function RestockWorkflowEditor({
 
                   <div onDragOver={(e) => handleCardDragOver(e, pIdx, tIdx)}
                     onDrop={(e) => handleCardDrop(e, pIdx, tIdx)}
-                    className={`group/task flex items-stretch rounded-lg border border-gray-200 bg-white shadow-sm hover:shadow-md transition-all ${
+                    className={`group/task flex items-stretch rounded-lg border border-black/[0.05] bg-white hover:shadow-md transition-all ${
                       dragSource?.phaseIdx === pIdx && dragSource?.taskIdx === tIdx ? "opacity-40" : ""
                     }`}
                     style={{ borderLeftWidth: 3, borderLeftColor: phase.color }}>
                     {/* Drag handle */}
                     <div draggable onDragStart={(e) => handleGripDragStart(e, pIdx, tIdx)} onDragEnd={handleDragEnd}
-                      className="flex items-center px-1 cursor-grab active:cursor-grabbing text-gray-300 hover:text-gray-500 shrink-0">
+                      className="flex items-center px-1 cursor-grab active:cursor-grabbing text-neutral-dark/30 hover:text-neutral-dark/60 shrink-0">
                       <svg className="h-3.5 w-3.5" viewBox="0 0 16 16" fill="currentColor">
                         <circle cx="5" cy="3" r="1.2" /><circle cx="11" cy="3" r="1.2" />
                         <circle cx="5" cy="8" r="1.2" /><circle cx="11" cy="8" r="1.2" />
@@ -1443,18 +1501,18 @@ export function RestockWorkflowEditor({
                     </div>
                     <div className="flex-1 p-2 min-w-0">
                       <input value={task.name} onChange={(e) => updateTask(pIdx, tIdx, "name", e.target.value)}
-                        className="w-full text-xs text-gray-800 border-none outline-none bg-transparent placeholder-gray-400" placeholder="Nome task..." />
+                        className="w-full text-xs text-foreground border-none outline-none bg-transparent placeholder-neutral-dark/40" placeholder="Nome task..." />
                       <div className="mt-1 flex items-center justify-between">
                         <div className="flex items-center gap-1">
                           {task.duration_type === "fixed" ? (
                             <>
-                              <svg className="h-3 w-3 text-gray-400" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor">
+                              <svg className="h-3 w-3 text-neutral-dark/40" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor">
                                 <path strokeLinecap="round" strokeLinejoin="round" d="M12 6v6h4.5m4.5 0a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z" />
                               </svg>
                               <input type="number" min={1} value={task.duration_days}
                                 onChange={(e) => updateTask(pIdx, tIdx, "duration_days", Math.max(1, Number(e.target.value)))}
-                                className="w-10 text-xs text-gray-500 border border-gray-200 rounded px-1 py-0.5 text-center" title="Durata (giorni)" />
-                              <span className="text-xs text-gray-400">g</span>
+                                className="w-10 text-xs text-neutral-dark/60 border border-black/[0.05] rounded px-1 py-0.5 text-center focus:ring-primary/20 focus:border-primary/40" title="Durata (giorni)" />
+                              <span className="text-xs text-neutral-dark/40">g</span>
                             </>
                           ) : (
                             <span className="text-[10px] text-amber-600 font-medium">Variabile</span>
@@ -1468,8 +1526,8 @@ export function RestockWorkflowEditor({
                             }}
                             className={`rounded-full px-1.5 py-0.5 text-[9px] font-medium border ${
                               task.duration_type === "fixed"
-                                ? "border-gray-200 text-gray-400 hover:border-amber-300 hover:text-amber-600"
-                                : "border-amber-200 text-amber-600 hover:border-gray-300 hover:text-gray-500"
+                                ? "border-black/[0.05] text-neutral-dark/40 hover:border-amber-300 hover:text-amber-600"
+                                : "border-amber-200 text-amber-600 hover:border-neutral-dark/15 hover:text-neutral-dark/60"
                             }`}
                             title={task.duration_type === "fixed" ? "Cambia a durata variabile" : "Cambia a durata fissa"}
                           >
@@ -1478,7 +1536,7 @@ export function RestockWorkflowEditor({
                         </div>
                         {phase.tasks.length > 1 && (
                           <button type="button" onClick={() => removeTask(pIdx, tIdx)}
-                            className="rounded p-0.5 text-gray-300 opacity-0 group-hover/task:opacity-100 hover:text-red-500">
+                            className="rounded p-0.5 text-neutral-dark/30 opacity-0 group-hover/task:opacity-100 hover:text-red-500">
                             <svg className="h-3 w-3" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" /></svg>
                           </button>
                         )}
@@ -1498,7 +1556,7 @@ export function RestockWorkflowEditor({
             <button type="button" onClick={() => addTask(pIdx)}
               onDragOver={(e) => { e.preventDefault(); e.dataTransfer.dropEffect = "move"; setDropTarget(null); }}
               onDrop={(e) => handlePhaseEndDrop(e, pIdx)}
-              className="mt-2 flex w-full items-center justify-center gap-1 rounded-lg border border-dashed border-gray-300 py-1 text-xs text-gray-400 hover:border-gray-400 hover:text-gray-600">
+              className="mt-2 flex w-full items-center justify-center gap-1 rounded-lg border border-dashed border-neutral-dark/15 py-1 text-xs text-neutral-dark/40 hover:border-neutral-dark/40 hover:text-neutral-dark/70 press-scale">
               <svg className="h-3 w-3" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" d="M12 4.5v15m7.5-7.5h-15" /></svg>
               Task
             </button>
@@ -1507,7 +1565,7 @@ export function RestockWorkflowEditor({
 
         {/* Add phase column */}
         <button type="button" onClick={addPhase}
-          className="flex-shrink-0 w-28 flex flex-col items-center justify-center gap-1 rounded-xl border-2 border-dashed border-gray-300 py-6 text-gray-400 hover:border-gray-400 hover:text-gray-600">
+          className="flex-shrink-0 w-28 flex flex-col items-center justify-center gap-1 rounded-xl border-2 border-dashed border-neutral-dark/15 py-6 text-neutral-dark/40 hover:border-neutral-dark/40 hover:text-neutral-dark/70 press-scale">
           <svg className="h-6 w-6" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" d="M12 4.5v15m7.5-7.5h-15" /></svg>
           <span className="text-xs font-medium">Nuova Fase</span>
         </button>
@@ -1515,10 +1573,10 @@ export function RestockWorkflowEditor({
 
       {/* Footer */}
       <div className="flex items-center gap-2 flex-wrap">
-        <button onClick={handleSave} className="rounded bg-indigo-600 px-3 py-1 text-xs text-white hover:bg-indigo-700">Salva Workflow</button>
+        <button onClick={handleSave} className="rounded-full bg-primary px-3 py-1 text-xs text-white hover:bg-primary/90 press-scale">Salva Workflow</button>
         {onSaveAsTemplate && !savingAsTemplate && (
           <button onClick={() => setSavingAsTemplate(true)}
-            className="rounded border border-indigo-200 px-3 py-1 text-xs text-indigo-600 hover:bg-indigo-50">
+            className="rounded-full border border-primary/20 px-3 py-1 text-xs text-primary hover:bg-primary/10 press-scale">
             Salva come Template
           </button>
         )}
@@ -1527,15 +1585,15 @@ export function RestockWorkflowEditor({
             <input value={templateName} onChange={(e) => setTemplateName(e.target.value)}
               onKeyDown={(e) => { if (e.key === "Enter") handleSaveAsTemplate(); if (e.key === "Escape") setSavingAsTemplate(false); }}
               placeholder="Nome template" autoFocus
-              className="rounded border border-gray-300 px-2 py-1 text-xs w-36" />
+              className="rounded border border-neutral-dark/15 px-2 py-1 text-xs w-36 focus:ring-primary/20 focus:border-primary/40" />
             <button onClick={handleSaveAsTemplate}
-              className="rounded bg-indigo-600 px-2 py-1 text-xs text-white hover:bg-indigo-700">Salva</button>
+              className="rounded-full bg-primary px-2 py-1 text-xs text-white hover:bg-primary/90 press-scale">Salva</button>
             <button onClick={() => { setSavingAsTemplate(false); setTemplateName(""); }}
-              className="rounded border px-2 py-1 text-xs text-gray-500 hover:bg-gray-100">&#x2715;</button>
+              className="rounded-full border px-2 py-1 text-xs text-neutral-dark/60 hover:bg-black/[0.04] press-scale">&#x2715;</button>
           </div>
         )}
-        <button onClick={() => { onSave(null); }} className="rounded border border-red-200 px-3 py-1 text-xs text-red-600 hover:bg-red-50">Rimuovi</button>
-        <button onClick={onCancel} className="rounded border px-3 py-1 text-xs text-gray-600 hover:bg-gray-100">Annulla</button>
+        <button onClick={() => { onSave(null); }} className="rounded-full border border-red-200 px-3 py-1 text-xs text-red-600 hover:bg-red-50 press-scale">Rimuovi</button>
+        <button onClick={onCancel} className="rounded-full border px-3 py-1 text-xs text-neutral-dark/70 hover:bg-black/[0.04] press-scale">Annulla</button>
       </div>
     </div>
   );
@@ -1633,30 +1691,30 @@ function TemplateManagerModal({
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/30" onClick={onClose}>
       <div onClick={(e) => e.stopPropagation()} className="w-[80vw] max-w-[800px] max-h-[80vh] overflow-y-auto rounded-xl bg-white p-6 shadow-xl">
         <div className="flex items-center justify-between mb-4">
-          <h3 className="text-base font-semibold text-gray-900">Template Workflow Riapprovvigionamento</h3>
+          <h3 className="text-base font-semibold text-foreground">Template Workflow Riapprovvigionamento</h3>
           <div className="flex gap-2">
             {!isEditing && (
-              <button onClick={startCreate} className="rounded-lg bg-indigo-600 px-3 py-1.5 text-sm text-white hover:bg-indigo-700">+ Nuovo Template</button>
+              <button onClick={startCreate} className="rounded-full bg-primary px-3 py-1.5 text-sm text-white hover:bg-primary/90 press-scale">+ Nuovo Template</button>
             )}
-            <button onClick={onClose} className="rounded-lg border px-3 py-1.5 text-sm text-gray-600 hover:bg-gray-100">Chiudi</button>
+            <button onClick={onClose} className="rounded-full border px-3 py-1.5 text-sm text-neutral-dark/70 hover:bg-black/[0.04] press-scale">Chiudi</button>
           </div>
         </div>
 
         {/* Template list */}
         {!isEditing && (
           <div className="space-y-2">
-            {localTemplates.length === 0 && <p className="text-sm text-gray-400 py-4 text-center">Nessun template. Crea il primo!</p>}
+            {localTemplates.length === 0 && <p className="text-sm text-neutral-dark/40 py-4 text-center">Nessun template. Crea il primo!</p>}
             {localTemplates.map((tpl) => (
-              <div key={tpl.id} className="flex items-center justify-between rounded-lg border border-gray-200 px-4 py-3">
+              <div key={tpl.id} className="flex items-center justify-between rounded-lg border border-black/[0.05] px-4 py-3">
                 <div>
-                  <span className="font-medium text-gray-900">{tpl.name}</span>
-                  <span className="ml-2 text-xs text-gray-400">{tpl.phases.length} fasi, {tpl.phases.reduce((s, p) => s + p.tasks.length, 0)} task</span>
+                  <span className="font-medium text-foreground">{tpl.name}</span>
+                  <span className="ml-2 text-xs text-neutral-dark/40">{tpl.phases.length} fasi, {tpl.phases.reduce((s, p) => s + p.tasks.length, 0)} task</span>
                 </div>
                 <div className="flex gap-1">
-                  <button onClick={() => startEdit(tpl)} className="rounded p-1 text-gray-400 hover:text-indigo-600">
+                  <button onClick={() => startEdit(tpl)} className="rounded p-1 text-neutral-dark/40 hover:text-primary press-scale">
                     <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" d="m16.862 4.487 1.687-1.688a1.875 1.875 0 1 1 2.652 2.652L6.832 19.82a4.5 4.5 0 0 1-1.897 1.13l-2.685.8.8-2.685a4.5 4.5 0 0 1 1.13-1.897L16.863 4.487Z" /></svg>
                   </button>
-                  <button onClick={() => handleDelete(tpl.id)} className="rounded p-1 text-gray-400 hover:text-red-600">
+                  <button onClick={() => handleDelete(tpl.id)} className="rounded p-1 text-neutral-dark/40 hover:text-red-600 press-scale">
                     <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" d="m14.74 9-.346 9m-4.788 0L9.26 9m9.968-3.21c.342.052.682.107 1.022.166m-1.022-.165L18.16 19.673a2.25 2.25 0 0 1-2.244 2.077H8.084a2.25 2.25 0 0 1-2.244-2.077L4.772 5.79m14.456 0a48.108 48.108 0 0 0-3.478-.397m-12 .562c.34-.059.68-.114 1.022-.165m0 0a48.11 48.11 0 0 1 3.478-.397m7.5 0v-.916c0-1.18-.91-2.164-2.09-2.201a51.964 51.964 0 0 0-3.32 0c-1.18.037-2.09 1.022-2.09 2.201v.916m7.5 0a48.667 48.667 0 0 0-7.5 0" /></svg>
                   </button>
                 </div>
@@ -1669,9 +1727,9 @@ function TemplateManagerModal({
         {isEditing && (
           <div className="space-y-4">
             <input value={editName} onChange={(e) => setEditName(e.target.value)} placeholder="Nome template"
-              className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm" autoFocus />
+              className="w-full rounded-lg border border-neutral-dark/15 px-3 py-2 text-sm focus:ring-primary/20 focus:border-primary/40" autoFocus />
 
-            <label className="block text-xs font-semibold text-gray-700 uppercase tracking-wider">Fasi</label>
+            <label className="block text-xs font-semibold text-neutral-dark uppercase tracking-wider">Fasi</label>
 
             <div className="flex gap-3 overflow-x-auto pb-2">
               {editPhases.map((phase, pIdx) => (
@@ -1689,16 +1747,16 @@ function TemplateManagerModal({
                   </div>
 
                   {phase.tasks.map((task, tIdx) => (
-                    <div key={task.id} className="mb-1 flex items-center gap-1 rounded border border-gray-200 bg-white px-2 py-1.5"
+                    <div key={task.id} className="mb-1 flex items-center gap-1 rounded border border-black/[0.05] bg-white px-2 py-1.5"
                       style={{ borderLeftWidth: 3, borderLeftColor: phase.color }}>
                       <input value={task.name} onChange={(e) => updateTask(pIdx, tIdx, "name", e.target.value)}
-                        className="flex-1 text-xs text-gray-800 border-none outline-none bg-transparent min-w-0" placeholder="Task..." />
+                        className="flex-1 text-xs text-foreground border-none outline-none bg-transparent min-w-0" placeholder="Task..." />
                       {task.duration_type === "fixed" ? (
                         <>
                           <input type="number" min={1} value={task.duration_days}
                             onChange={(e) => updateTask(pIdx, tIdx, "duration_days", Math.max(1, Number(e.target.value)))}
-                            className="w-8 text-xs text-gray-500 border border-gray-200 rounded px-1 py-0.5 text-center" />
-                          <span className="text-xs text-gray-400">g</span>
+                            className="w-8 text-xs text-neutral-dark/60 border border-black/[0.05] rounded px-1 py-0.5 text-center focus:ring-primary/20 focus:border-primary/40" />
+                          <span className="text-xs text-neutral-dark/40">g</span>
                         </>
                       ) : (
                         <span className="text-[10px] text-amber-600 font-medium">Var</span>
@@ -1712,37 +1770,37 @@ function TemplateManagerModal({
                         }}
                         className={`rounded-full px-1 py-0.5 text-[9px] font-medium border ${
                           task.duration_type === "fixed"
-                            ? "border-gray-200 text-gray-400 hover:border-amber-300"
-                            : "border-amber-200 text-amber-600 hover:border-gray-300"
+                            ? "border-black/[0.05] text-neutral-dark/40 hover:border-amber-300"
+                            : "border-amber-200 text-amber-600 hover:border-neutral-dark/15"
                         }`}
                         title={task.duration_type === "fixed" ? "Cambia a variabile" : "Cambia a fisso"}
                       >
                         {task.duration_type === "fixed" ? "F" : "V"}
                       </button>
                       {phase.tasks.length > 1 && (
-                        <button onClick={() => removeTask(pIdx, tIdx)} className="text-gray-300 hover:text-red-500">
+                        <button onClick={() => removeTask(pIdx, tIdx)} className="text-neutral-dark/30 hover:text-red-500">
                           <svg className="h-3 w-3" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" /></svg>
                         </button>
                       )}
                     </div>
                   ))}
                   <button type="button" onClick={() => addTask(pIdx)}
-                    className="mt-1 flex w-full items-center justify-center gap-1 rounded border border-dashed border-gray-300 py-1 text-xs text-gray-400 hover:text-gray-600">
+                    className="mt-1 flex w-full items-center justify-center gap-1 rounded border border-dashed border-neutral-dark/15 py-1 text-xs text-neutral-dark/40 hover:text-neutral-dark/70 press-scale">
                     + Task
                   </button>
                 </div>
               ))}
 
               <button type="button" onClick={addPhase}
-                className="flex-shrink-0 w-28 flex flex-col items-center justify-center gap-1 rounded-xl border-2 border-dashed border-gray-300 py-6 text-gray-400 hover:text-gray-600">
+                className="flex-shrink-0 w-28 flex flex-col items-center justify-center gap-1 rounded-xl border-2 border-dashed border-neutral-dark/15 py-6 text-neutral-dark/40 hover:text-neutral-dark/70 press-scale">
                 <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" d="M12 4.5v15m7.5-7.5h-15" /></svg>
                 <span className="text-xs">Fase</span>
               </button>
             </div>
 
-            <div className="flex gap-2 border-t border-gray-100 pt-3">
-              <button onClick={handleSave} className="rounded-lg bg-indigo-600 px-4 py-2 text-sm text-white hover:bg-indigo-700">Salva Template</button>
-              <button onClick={() => { setEditingId(null); setCreating(false); }} className="rounded-lg border px-4 py-2 text-sm text-gray-600 hover:bg-gray-100">Annulla</button>
+            <div className="flex gap-2 border-t border-black/[0.03] pt-3">
+              <button onClick={handleSave} className="rounded-full bg-primary px-4 py-2 text-sm text-white hover:bg-primary/90 press-scale">Salva Template</button>
+              <button onClick={() => { setEditingId(null); setCreating(false); }} className="rounded-full border px-4 py-2 text-sm text-neutral-dark/70 hover:bg-black/[0.04] press-scale">Annulla</button>
             </div>
           </div>
         )}

@@ -91,8 +91,12 @@ export default function DDMRPPurchaseOrders() {
 
   if (isLoading) {
     return (
-      <div className="flex items-center justify-center h-40">
-        <div className="h-6 w-6 animate-spin rounded-full border-2 border-primary border-t-transparent" />
+      <div className="flex flex-col items-center justify-center h-40 gap-3">
+        <div className="w-full max-w-lg px-6 space-y-3">
+          <div className="h-4 w-full rounded-md bg-neutral-dark/[0.06] animate-pulse" />
+          <div className="h-4 w-3/4 rounded-md bg-neutral-dark/[0.06] animate-pulse" />
+          <div className="h-4 w-1/2 rounded-md bg-neutral-dark/[0.06] animate-pulse" />
+        </div>
       </div>
     );
   }
@@ -110,7 +114,7 @@ export default function DDMRPPurchaseOrders() {
     <div className="flex-1 overflow-auto">
       <table className="w-full text-xs">
         <thead className="sticky top-0 bg-white z-10">
-          <tr className="border-b border-black/5">
+          <tr className="border-b border-black/[0.04]">
             <th className="px-4 py-2.5 text-left text-[10px] font-semibold uppercase text-neutral-dark/40">PO #</th>
             <th className="px-3 py-2.5 text-left text-[10px] font-semibold uppercase text-neutral-dark/40">Supplier</th>
             <th className="px-3 py-2.5 text-left text-[10px] font-semibold uppercase text-neutral-dark/40">Status</th>
@@ -205,10 +209,10 @@ function OrderRow({
                 key={t.status}
                 onClick={() => onStatusChange(order.id, t.status)}
                 disabled={updating}
-                className={`px-2 py-1 text-[10px] font-medium rounded transition-colors ${
+                className={`px-2 py-1 text-[10px] font-medium rounded press-scale transition-colors ${
                   t.status === "cancelled"
                     ? "text-red-500 hover:bg-red-50"
-                    : "text-foreground hover:bg-black/5"
+                    : "text-foreground hover:bg-black/[0.04]"
                 } disabled:opacity-40`}
               >
                 {t.label}
@@ -218,7 +222,7 @@ function OrderRow({
               <button
                 onClick={() => onDelete(order.id)}
                 disabled={updating}
-                className="px-2 py-1 text-[10px] font-medium text-red-500 hover:bg-red-50 rounded transition-colors disabled:opacity-40"
+                className="px-2 py-1 text-[10px] font-medium text-red-500 hover:bg-red-50 rounded press-scale transition-colors disabled:opacity-40"
               >
                 Delete
               </button>
@@ -230,10 +234,10 @@ function OrderRow({
       {/* Expanded detail */}
       {expanded && (
         <tr>
-          <td colSpan={8} className="px-8 py-4 bg-black/[0.01]">
+          <td colSpan={8} className="px-8 py-4 bg-neutral-light/40">
             <table className="w-full text-xs mb-3">
               <thead>
-                <tr className="border-b border-black/5">
+                <tr className="border-b border-black/[0.04]">
                   <th className="px-2 py-1.5 text-left text-[10px] font-semibold uppercase text-neutral-dark/40">SKU</th>
                   <th className="px-2 py-1.5 text-left text-[10px] font-semibold uppercase text-neutral-dark/40">Product</th>
                   <th className="px-2 py-1.5 text-right text-[10px] font-semibold uppercase text-neutral-dark/40">Ordered</th>
@@ -269,7 +273,7 @@ function OrderRow({
                               [line.id]: parseInt(e.target.value) || 0,
                             })
                           }
-                          className="w-16 px-2 py-1 text-xs text-right rounded border border-black/10 focus:outline-none focus:ring-1 focus:ring-primary/30"
+                          className="w-16 px-2 py-1 text-xs text-right rounded border border-black/[0.06] focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary/40"
                         />
                       </td>
                     )}
@@ -282,7 +286,7 @@ function OrderRow({
               <button
                 onClick={() => onReceive(order)}
                 disabled={receiving}
-                className="px-4 py-1.5 text-xs font-medium text-white bg-emerald-600 rounded-lg hover:bg-emerald-700 disabled:opacity-40 transition-colors"
+                className="px-4 py-1.5 text-xs font-medium text-white bg-emerald-600 rounded-full press-scale hover:bg-emerald-700 disabled:opacity-40 transition-colors"
               >
                 {receiving ? "Receiving..." : "Receive Goods"}
               </button>

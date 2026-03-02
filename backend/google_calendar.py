@@ -166,6 +166,21 @@ def create_event(title: str, start: str, end: str, description: str = "") -> dic
     return event
 
 
+def update_event_times(event_id: str, end_datetime: Optional[str] = None, start_datetime: Optional[str] = None) -> dict:
+    """Aggiorna gli orari di un evento su Google Calendar."""
+    service = get_calendar_service()
+    body: dict = {}
+    if start_datetime:
+        body["start"] = {"dateTime": start_datetime, "timeZone": "Europe/Rome"}
+    if end_datetime:
+        body["end"] = {"dateTime": end_datetime, "timeZone": "Europe/Rome"}
+    return service.events().patch(
+        calendarId="primary",
+        eventId=event_id,
+        body=body,
+    ).execute()
+
+
 def delete_event(event_id: str) -> None:
     """Elimina un evento dal Google Calendar."""
     service = get_calendar_service()

@@ -3,7 +3,7 @@ EasyFlow Backend - Entry point FastAPI
 Project Manager basato su chat con integrazione Google Calendar.
 """
 import os
-from datetime import datetime, time
+from datetime import datetime, time, timedelta
 from typing import Optional, List
 
 from fastapi import FastAPI, HTTPException, Query
@@ -15,6 +15,7 @@ from dotenv import load_dotenv
 # Carica variabili d'ambiente dal file .env nella root del progetto
 load_dotenv(dotenv_path=os.path.join(os.path.dirname(__file__), "..", ".env"))
 
+import scheduler
 from scheduler import find_next_available_slot
 from chat_parser import parse_tasks_from_message
 import google_calendar as gcal
@@ -23,13 +24,16 @@ import gantt_templates
 import shopify_client as shopify
 import shopify_analyzer
 import inventory_store as inventory
+import restock_engine
+import settings_store
 
 app = FastAPI(title="EasyFlow API", version="0.1.0")
 
 # CORS per permettere al frontend Next.js di comunicare con il backend
+ALLOWED_ORIGINS = os.getenv("ALLOWED_ORIGINS", "http://localhost:3000").split(",")
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["http://localhost:3000"],
+    allow_origins=ALLOWED_ORIGINS,
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
@@ -65,6 +69,7 @@ class GanttTaskCreate(BaseModel):
     duration: float
     start_date: str
     color: Optional[str] = "#3B82F6"
+    daily_hours: Optional[float] = None
 
 
 class GanttTaskUpdate(BaseModel):
@@ -75,6 +80,7 @@ class GanttTaskUpdate(BaseModel):
     startDate: Optional[str] = None
     collapsed: Optional[bool] = None
     dependencies: Optional[List[str]] = None
+    daily_hours: Optional[float] = None
 
 
 class GanttTemplateTaskDef(BaseModel):
@@ -187,7 +193,24 @@ def parse_chat_message(body: ChatMessage):
     Non schedula ancora - permette all'utente di correggere i tag prima.
     """
     try:
-        tasks = parse_tasks_from_message(body.message)
+        # Fetch today's events so the AI knows about existing schedule
+        today_events = []
+        try:
+            raw_events = gcal.get_events(days=1)
+            for ev in raw_events:
+                start = ev.get("start", {})
+                end = ev.get("end", {})
+                start_dt = start.get("dateTime") or start.get("date", "")
+                end_dt = end.get("dateTime") or end.get("date", "")
+                today_events.append({
+                    "title": ev.get("summary", ""),
+                    "start": start_dt,
+                    "end": end_dt,
+                })
+        except Exception:
+            pass  # If calendar unavailable, proceed without events
+
+        tasks = parse_tasks_from_message(body.message, existing_events=today_events)
 
         # Costruisci messaggio di conferma per tutte le task
         summaries = []
@@ -251,7 +274,7 @@ def schedule_task(task: TaskSchedule):
         )
 
         # 3. Crea l'evento su Google Calendar
-        description = f"[EasyFlow] Urgenza: {task.urgency.upper()} | Tipo: {'Deep Work' if task.type == 'deep_work' else 'Noise'}"
+        description = f"[EasyFlow:source=microtask,status=todo] Urgenza: {task.urgency.upper()} | Tipo: {'Deep Work' if task.type == 'deep_work' else 'Noise'}"
         event = gcal.create_event(
             title=task.title,
             start=slot["start"],
@@ -271,6 +294,23 @@ def schedule_task(task: TaskSchedule):
                 "calendar_link": event.get("htmlLink"),
             },
         }
+    except ValueError as e:
+        raise HTTPException(status_code=401, detail=str(e))
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+class CalendarEventUpdate(BaseModel):
+    start: Optional[str] = None
+    end: Optional[str] = None
+
+
+@app.patch("/api/calendar/events/{event_id}")
+def update_calendar_event(event_id: str, body: CalendarEventUpdate):
+    """Aggiorna gli orari di un evento su Google Calendar."""
+    try:
+        updated = gcal.update_event_times(event_id, end_datetime=body.end, start_datetime=body.start)
+        return {"updated": True, "event": updated}
     except ValueError as e:
         raise HTTPException(status_code=401, detail=str(e))
     except Exception as e:
@@ -320,7 +360,8 @@ def delete_gantt_section(section_id: str):
 @app.post("/api/gantt/sections/{section_id}/tasks")
 def create_gantt_task(section_id: str, body: GanttTaskCreate):
     task = gantt_store.add_task(
-        section_id, body.title, body.duration, body.start_date, body.color or "#3B82F6"
+        section_id, body.title, body.duration, body.start_date, body.color or "#3B82F6",
+        daily_hours=body.daily_hours or 0,
     )
     if not task:
         raise HTTPException(status_code=404, detail="Sezione non trovata")
@@ -354,11 +395,83 @@ def duplicate_gantt_task(section_id: str, task_id: str):
 @app.post("/api/gantt/sections/{section_id}/tasks/{parent_task_id}/subtasks")
 def create_gantt_subtask(section_id: str, parent_task_id: str, body: GanttTaskCreate):
     task = gantt_store.add_subtask(
-        section_id, parent_task_id, body.title, body.duration, body.start_date, body.color or "#3B82F6"
+        section_id, parent_task_id, body.title, body.duration, body.start_date, body.color or "#3B82F6",
+        daily_hours=body.daily_hours or 0,
     )
     if not task:
         raise HTTPException(status_code=404, detail="Sezione o task genitore non trovata")
     return task
+
+
+# --- Gantt → Calendar Sync ---
+
+def _collect_tasks_with_hours(sections):
+    """Recursively collect all tasks with daily_hours > 0."""
+    results = []
+    for section in sections:
+        for task in section.get("tasks", []):
+            _collect_tasks_recursive(task, results)
+    return results
+
+
+def _collect_tasks_recursive(task, results):
+    if task.get("daily_hours", 0) > 0:
+        results.append(task)
+    for child in task.get("children", []):
+        _collect_tasks_recursive(child, results)
+
+
+@app.post("/api/gantt/sync-calendar")
+def sync_gantt_to_calendar():
+    """Sync Gantt tasks with daily_hours > 0 to Google Calendar."""
+    try:
+        project = gantt_store.load_project()
+        tasks = _collect_tasks_with_hours(project.get("sections", []))
+
+        if not tasks:
+            return {"synced": 0, "events": []}
+
+        created_events = []
+        for task in tasks:
+            daily_hours = task["daily_hours"]
+            duration_minutes = int(daily_hours * 60)
+            start_date = datetime.strptime(task["startDate"], "%Y-%m-%d")
+            task_duration_days = max(1, int(task["duration"]))
+
+            for day_offset in range(task_duration_days):
+                target_date = start_date + timedelta(days=day_offset)
+                date_str = target_date.strftime("%Y-%m-%d")
+
+                # Get existing events for this day to avoid conflicts
+                try:
+                    day_events = gcal.get_events(date_str, days=1)
+                except Exception:
+                    day_events = []
+
+                # Find a free slot using the scheduler
+                slot = scheduler.find_next_available_slot(
+                    task_type="noise",
+                    urgency="normal",
+                    duration=duration_minutes,
+                    existing_events=day_events,
+                    reference_time=datetime.combine(target_date.date(), time(9, 0)),
+                )
+
+                # Create calendar event
+                event = gcal.create_event(
+                    title=task["title"],
+                    start=slot["start"],
+                    end=slot["end"],
+                    description=f"[EasyFlow:source=gantt,task_id={task['id']}]",
+                )
+                created_events.append(event)
+
+        return {"synced": len(created_events), "events": created_events}
+
+    except ValueError as e:
+        raise HTTPException(status_code=401, detail=str(e))
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
 
 
 # --- Gantt Templates ---
@@ -560,6 +673,9 @@ class RestockTaskDef(BaseModel):
     name: str
     duration_days: int = 1
     duration_type: str = "fixed"
+    per_unit_duration_days: Optional[float] = None
+    min_duration_days: Optional[int] = None
+    max_duration_days: Optional[int] = None
 
 
 class RestockPhaseDef(BaseModel):
@@ -578,6 +694,8 @@ class BomItemCreate(BaseModel):
     quantity: int = 1
     supplier: str = ""
     unit_cost: float = 0
+    moq: int = 1
+    sku: str = ""
     restock_workflow: Optional[RestockWorkflowDef] = None
 
 
@@ -588,6 +706,8 @@ class BomItemUpdate(BaseModel):
     unit_cost: Optional[float] = None
     quantity_in_stock: Optional[int] = None
     collapsed: Optional[bool] = None
+    moq: Optional[int] = None
+    sku: Optional[str] = None
     restock_workflow: Optional[RestockWorkflowDef] = None
 
 
@@ -600,11 +720,21 @@ class SupplierCreate(BaseModel):
     name: str
     phone: str = ""
     email: str = ""
+    contact_person: str = ""
+    channel_type: str = "email"
+    notes: str = ""
+    default_lead_time: Optional[int] = None
+    default_moq: Optional[int] = None
 
 
 class SupplierUpdate(BaseModel):
     phone: Optional[str] = None
     email: Optional[str] = None
+    contact_person: Optional[str] = None
+    channel_type: Optional[str] = None
+    notes: Optional[str] = None
+    default_lead_time: Optional[int] = None
+    default_moq: Optional[int] = None
 
 
 class RestockTemplateCreate(BaseModel):
@@ -681,6 +811,8 @@ def add_bom_child(product_id: str, parent_id: str, body: BomItemCreate):
         quantity=body.quantity,
         supplier=body.supplier,
         unit_cost=body.unit_cost,
+        moq=body.moq,
+        sku=body.sku,
         restock_workflow=workflow_dict,
     )
     if not result:
@@ -739,12 +871,20 @@ def add_supplier(body: SupplierCreate):
     name = body.name.strip()
     if not name:
         raise HTTPException(status_code=400, detail="Nome fornitore obbligatorio")
-    return {"suppliers": inventory.add_supplier(name, body.phone, body.email)}
+    return {"suppliers": inventory.add_supplier(
+        name, body.phone, body.email,
+        contact_person=body.contact_person,
+        channel_type=body.channel_type,
+        notes=body.notes,
+        default_lead_time=body.default_lead_time,
+        default_moq=body.default_moq,
+    )}
 
 
 @app.patch("/api/inventory/suppliers/{name}")
 def update_supplier(name: str, body: SupplierUpdate):
-    return {"suppliers": inventory.update_supplier(name, body.phone, body.email)}
+    updates = body.dict(exclude_none=True)
+    return {"suppliers": inventory.update_supplier(name, updates)}
 
 
 @app.delete("/api/inventory/suppliers/{name}")
@@ -768,7 +908,15 @@ def create_restock_template(body: RestockTemplateCreate):
             "name": p.name,
             "color": p.color or "#3B82F6",
             "tasks": [
-                {"id": str(_uuid.uuid4())[:8], "name": t.name, "duration_days": t.duration_days, "duration_type": t.duration_type or "fixed"}
+                {
+                    "id": str(_uuid.uuid4())[:8],
+                    "name": t.name,
+                    "duration_days": t.duration_days,
+                    "duration_type": t.duration_type or "fixed",
+                    "per_unit_duration_days": t.per_unit_duration_days,
+                    "min_duration_days": t.min_duration_days,
+                    "max_duration_days": t.max_duration_days,
+                }
                 for t in p.tasks
             ],
         }
@@ -790,7 +938,15 @@ def patch_restock_template(template_id: str, body: RestockTemplateUpdate):
                 "name": p.name,
                 "color": p.color or "#3B82F6",
                 "tasks": [
-                    {"id": t.id or str(_uuid.uuid4())[:8], "name": t.name, "duration_days": t.duration_days, "duration_type": t.duration_type or "fixed"}
+                    {
+                        "id": t.id or str(_uuid.uuid4())[:8],
+                        "name": t.name,
+                        "duration_days": t.duration_days,
+                        "duration_type": t.duration_type or "fixed",
+                        "per_unit_duration_days": t.per_unit_duration_days,
+                        "min_duration_days": t.min_duration_days,
+                        "max_duration_days": t.max_duration_days,
+                    }
                     for t in p.tasks
                 ],
             }
@@ -809,3 +965,81 @@ def delete_restock_template(template_id: str):
     if not inventory.delete_restock_template(template_id):
         raise HTTPException(status_code=404, detail="Template non trovato")
     return {"deleted": True}
+
+
+# --- Restock Engine ---
+
+@app.get("/api/restock/recommendations")
+def get_restock_recommendations():
+    """Genera raccomandazioni di restock per tutti i prodotti BOM."""
+    try:
+        recommendations = restock_engine.get_recommendations()
+        return {"recommendations": recommendations}
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+class RestockConfirmRequest(BaseModel):
+    product_id: str
+    reorder_qty: int
+    components: Optional[List[dict]] = None
+
+
+@app.post("/api/restock/confirm")
+def confirm_restock(body: RestockConfirmRequest):
+    """Conferma un restock: genera progetto Gantt con task per ogni fase componente."""
+    try:
+        result = restock_engine.generate_restock_project(
+            product_id=body.product_id,
+            reorder_qty=body.reorder_qty,
+            components=body.components,
+        )
+        return result
+    except ValueError as e:
+        raise HTTPException(status_code=404, detail=str(e))
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+# --- Settings ---
+
+class SettingsUpdate(BaseModel):
+    safety_stock_days: Optional[int] = None
+    demand_window_days: Optional[int] = None
+    spike_threshold_k: Optional[float] = None
+    deep_work_start: Optional[str] = None
+    deep_work_end: Optional[str] = None
+    noise_start: Optional[str] = None
+    noise_end: Optional[str] = None
+    onboarding_completed: Optional[bool] = None
+
+
+@app.get("/api/restock/settings")
+def get_restock_settings():
+    """Leggi impostazioni restock e scheduling."""
+    return settings_store.load_settings()
+
+
+@app.post("/api/restock/settings")
+def update_restock_settings(body: SettingsUpdate):
+    """Aggiorna impostazioni restock e scheduling."""
+    updates = body.dict(exclude_none=True)
+    if not updates:
+        raise HTTPException(status_code=400, detail="Nessun campo da aggiornare")
+    return settings_store.update_settings(updates)
+
+
+# --- Onboarding ---
+
+@app.get("/api/settings/onboarding-status")
+def get_onboarding_status():
+    """Verifica stato onboarding: ha prodotti, supplier, settings completato."""
+    settings = settings_store.load_settings()
+    inv_data = inventory.load_data()
+    has_products = len(inv_data.get("products", [])) > 0
+    has_suppliers = len(inv_data.get("suppliers", [])) > 0
+    return {
+        "completed": settings.get("onboarding_completed", False),
+        "has_products": has_products,
+        "has_suppliers": has_suppliers,
+    }

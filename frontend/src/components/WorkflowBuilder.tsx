@@ -328,7 +328,7 @@ export default function WorkflowBuilder({
     return (
       <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/30">
         <div className="rounded-xl bg-white p-8 shadow-xl">
-          <span className="text-sm text-gray-400">Caricamento...</span>
+          <span className="text-sm text-neutral-dark/40">Caricamento...</span>
         </div>
       </div>
     );
@@ -347,25 +347,25 @@ export default function WorkflowBuilder({
         className="w-[90vw] max-w-[900px] max-h-[85vh] overflow-y-auto rounded-xl bg-white p-6 shadow-xl"
       >
         {/* Header: Name + Category */}
-        <h3 className="mb-4 text-base font-semibold text-gray-900">
+        <h3 className="mb-4 text-base font-semibold text-foreground">
           {templateId ? "Modifica Template" : "Nuovo Template"}
         </h3>
 
         <div className="mb-5 flex gap-3">
           <div className="flex-1">
-            <label className="mb-1 block text-xs font-medium text-gray-600">
+            <label className="mb-1 block text-xs font-medium text-neutral-dark/70">
               Nome
             </label>
             <input
               autoFocus
               value={name}
               onChange={(e) => setName(e.target.value)}
-              className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:border-blue-500 focus:outline-none"
+              className="w-full rounded-lg border border-neutral-dark/15 px-3 py-2 text-sm focus:border-primary/40 focus:ring-primary/20 focus:outline-none"
               placeholder="Nome template..."
             />
           </div>
           <div className="w-44">
-            <label className="mb-1 block text-xs font-medium text-gray-600">
+            <label className="mb-1 block text-xs font-medium text-neutral-dark/70">
               Categoria
             </label>
             {customCat ? (
@@ -373,7 +373,7 @@ export default function WorkflowBuilder({
                 <input
                   value={cat}
                   onChange={(e) => setCat(e.target.value)}
-                  className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:border-blue-500 focus:outline-none"
+                  className="w-full rounded-lg border border-neutral-dark/15 px-3 py-2 text-sm focus:border-primary/40 focus:ring-primary/20 focus:outline-none"
                   placeholder="Nuova categoria..."
                 />
                 <button
@@ -382,7 +382,7 @@ export default function WorkflowBuilder({
                     setCustomCat(false);
                     setCat(existingCategories[0] || "");
                   }}
-                  className="shrink-0 rounded-lg border border-gray-300 px-2 text-gray-400 hover:text-gray-600"
+                  className="shrink-0 rounded-lg border border-neutral-dark/15 px-2 text-neutral-dark/40 hover:text-neutral-dark/70"
                   title="Scegli esistente"
                 >
                   <svg
@@ -411,7 +411,7 @@ export default function WorkflowBuilder({
                     setCat(e.target.value);
                   }
                 }}
-                className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:border-blue-500 focus:outline-none"
+                className="w-full rounded-lg border border-neutral-dark/15 px-3 py-2 text-sm focus:border-primary/40 focus:ring-primary/20 focus:outline-none"
               >
                 {existingCategories.map((c) => (
                   <option key={c} value={c}>
@@ -425,7 +425,7 @@ export default function WorkflowBuilder({
         </div>
 
         {/* Workflow phases label */}
-        <label className="mb-3 block text-xs font-semibold text-gray-700 uppercase tracking-wider">
+        <label className="mb-3 block text-xs font-semibold text-neutral-dark uppercase tracking-wider">
           Fasi del Workflow
         </label>
 
@@ -483,9 +483,9 @@ export default function WorkflowBuilder({
                     {/* Connector line */}
                     {tIdx > 0 && (
                       <div className="flex flex-col items-center py-0.5">
-                        <div className="w-0.5 h-2.5 bg-gray-300 rounded-full" />
+                        <div className="w-0.5 h-2.5 bg-neutral-dark/30 rounded-full" />
                         <svg
-                          className="h-1.5 w-2.5 text-gray-300"
+                          className="h-1.5 w-2.5 text-neutral-dark/30"
                           viewBox="0 0 10 6"
                         >
                           <path d="M5 6L0 0h10z" fill="currentColor" />
@@ -513,7 +513,7 @@ export default function WorkflowBuilder({
                     <div
                       onDragOver={(e) => handleCardDragOver(e, pIdx, tIdx)}
                       onDrop={(e) => handleCardDrop(e, pIdx, tIdx)}
-                      className={`group/task flex items-stretch rounded-lg border border-gray-200 bg-white shadow-sm hover:shadow-md transition-all ${
+                      className={`group/task flex items-stretch rounded-lg border border-black/[0.05] bg-white  hover:shadow-md transition-all ${
                         dragSource &&
                         dragSource.phaseIdx === pIdx &&
                         dragSource.taskIdx === tIdx
@@ -529,7 +529,7 @@ export default function WorkflowBuilder({
                           handleGripDragStart(e, pIdx, tIdx)
                         }
                         onDragEnd={handleDragEnd}
-                        className="flex items-center px-1 cursor-grab active:cursor-grabbing text-gray-300 hover:text-gray-500 transition-colors shrink-0"
+                        className="flex items-center px-1 cursor-grab active:cursor-grabbing text-neutral-dark/30 hover:text-neutral-dark/60 transition-colors shrink-0"
                         title="Trascina per riordinare"
                       >
                         <svg
@@ -553,13 +553,13 @@ export default function WorkflowBuilder({
                           onChange={(e) =>
                             updateTask(pIdx, tIdx, "title", e.target.value)
                           }
-                          className="w-full text-sm text-gray-800 border-none outline-none bg-transparent placeholder-gray-400"
+                          className="w-full text-sm text-foreground border-none outline-none bg-transparent placeholder-neutral-dark/40"
                           placeholder="Nome task..."
                         />
                         <div className="mt-1.5 flex items-center justify-between">
                           <div className="flex items-center gap-1">
                             <svg
-                              className="h-3 w-3 text-gray-400"
+                              className="h-3 w-3 text-neutral-dark/40"
                               fill="none"
                               viewBox="0 0 24 24"
                               strokeWidth={1.5}
@@ -581,7 +581,7 @@ export default function WorkflowBuilder({
                                   e.target.value
                                 )
                               }
-                              className="w-12 text-xs text-gray-500 border border-gray-200 rounded px-1.5 py-0.5 text-center focus:border-blue-400 focus:outline-none"
+                              className="w-12 text-xs text-neutral-dark/60 border border-black/[0.05] rounded px-1.5 py-0.5 text-center focus:border-primary/40 focus:outline-none"
                               placeholder="1g"
                               title="Durata (m/h/g)"
                             />
@@ -590,7 +590,7 @@ export default function WorkflowBuilder({
                             <button
                               type="button"
                               onClick={() => removeTask(pIdx, tIdx)}
-                              className="rounded p-0.5 text-gray-300 opacity-0 group-hover/task:opacity-100 hover:text-red-500 transition-all"
+                              className="rounded p-0.5 text-neutral-dark/30 opacity-0 group-hover/task:opacity-100 hover:text-red-500 transition-all"
                             >
                               <svg
                                 className="h-3.5 w-3.5"
@@ -636,7 +636,7 @@ export default function WorkflowBuilder({
                 onClick={() => addTask(pIdx)}
                 onDragOver={handlePhaseEndDragOver}
                 onDrop={(e) => handlePhaseEndDrop(e, pIdx)}
-                className="mt-2 flex w-full items-center justify-center gap-1 rounded-lg border border-dashed border-gray-300 py-1.5 text-xs text-gray-400 hover:border-gray-400 hover:text-gray-600 transition-colors"
+                className="mt-2 flex w-full items-center justify-center gap-1 rounded-lg border border-dashed border-neutral-dark/15 py-1.5 text-xs text-neutral-dark/40 hover:border-neutral-dark/30 hover:text-neutral-dark/70 transition-colors"
               >
                 <svg
                   className="h-3.5 w-3.5"
@@ -660,7 +660,7 @@ export default function WorkflowBuilder({
           <button
             type="button"
             onClick={addPhase}
-            className="flex-shrink-0 w-36 flex flex-col items-center justify-center gap-2 rounded-xl border-2 border-dashed border-gray-300 py-8 text-gray-400 hover:border-gray-400 hover:text-gray-600 transition-colors"
+            className="flex-shrink-0 w-36 flex flex-col items-center justify-center gap-2 rounded-xl border-2 border-dashed border-neutral-dark/15 py-8 text-neutral-dark/40 hover:border-neutral-dark/30 hover:text-neutral-dark/70 transition-colors"
           >
             <svg
               className="h-8 w-8"
@@ -680,7 +680,7 @@ export default function WorkflowBuilder({
         </div>
 
         {/* Footer buttons */}
-        <div className="flex items-center justify-between border-t border-gray-100 pt-4">
+        <div className="flex items-center justify-between border-t border-black/[0.03] pt-4">
           <div>
             {onDelete && (
               <button
@@ -696,13 +696,13 @@ export default function WorkflowBuilder({
             <button
               type="button"
               onClick={onClose}
-              className="rounded-lg px-4 py-2 text-sm text-gray-600 hover:bg-gray-100 transition-colors"
+              className="rounded-lg px-4 py-2 text-sm text-neutral-dark/70 hover:bg-black/[0.04] transition-colors"
             >
               Annulla
             </button>
             <button
               type="submit"
-              className="rounded-lg bg-blue-600 px-5 py-2 text-sm font-medium text-white hover:bg-blue-700 transition-colors"
+              className="rounded-full bg-primary px-5 py-2 text-sm font-medium text-white hover:bg-primary/90 press-scale transition-colors"
             >
               Salva
             </button>

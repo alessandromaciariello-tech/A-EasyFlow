@@ -1,31 +1,38 @@
 @import "tailwindcss";
 
 @theme inline {
-  --color-background: #F8F9FB;
-  --color-foreground: #1A1D1F;
-  --color-primary: #01af3b;
-  --color-secondary: #2596be;
-  --color-neutral-light: #F4F5F7;
-  --color-neutral-dark: #666666;
-  --font-sans: "Inter", system-ui, sans-serif;
-  --font-mono: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
+  --color-background: #EDEBE7;
+  --color-foreground: #1C1C1C;
+  --color-primary: #2D6A4F;
+  --color-secondary: #5E8C6A;
+  --color-neutral-light: #F5F3EF;
+  --color-neutral-dark: #6B6560;
+  --font-sans: var(--font-geist-sans), system-ui, sans-serif;
+  --font-mono: var(--font-geist-mono), ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
 
-  --shadow-brand: 0 4px 24px rgba(0, 0, 0, 0.03), 0 1px 2px rgba(0, 0, 0, 0.02);
-  --radius-brand-button: 8px;
-  --radius-brand-card: 1.5rem;
+  --shadow-brand: 0 4px 24px rgba(60, 50, 40, 0.04), 0 1px 2px rgba(60, 50, 40, 0.03);
+  --radius-brand-button: 9999px;
+  --radius-brand-card: 1.25rem;
 }
 
 @layer utilities {
   .bg-brand-gradient {
-    background: linear-gradient(to right, #000000, #01af3b);
+    background: linear-gradient(135deg, #1C1C1C, #2D6A4F);
+  }
+
+  .skeleton-shimmer {
+    @apply animate-pulse rounded-lg;
+    background: rgba(107, 101, 96, 0.08);
   }
 }
 
 body {
-  background: var(--color-neutral-light);
+  background: var(--color-background);
   color: var(--color-neutral-dark);
   font-family: var(--font-sans);
   line-height: 1.5;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
 }
 
 h1,
@@ -41,11 +48,13 @@ h6 {
 h1 {
   font-size: 1.5rem;
   font-weight: 700;
+  letter-spacing: -0.025em;
 }
 
 h2 {
   font-size: 1.25rem;
   font-weight: 600;
+  letter-spacing: -0.02em;
 }
 
 h3 {
@@ -55,25 +64,38 @@ h3 {
 
 @layer components {
   .card-container {
-    @apply rounded-3xl bg-white border border-black/5 overflow-hidden;
-    box-shadow: 0 4px 24px rgba(0, 0, 0, 0.03), 0 1px 2px rgba(0, 0, 0, 0.02);
+    @apply rounded-2xl bg-white border border-black/[0.04] overflow-hidden;
+    box-shadow: 0 4px 24px rgba(60, 50, 40, 0.04), 0 1px 2px rgba(60, 50, 40, 0.02);
   }
 
   .pill-tab {
     @apply flex items-center gap-2 px-4 py-2 text-sm font-medium rounded-full transition-all duration-200;
   }
 
+  .pill-tab:active {
+    transform: scale(0.97);
+  }
+
   .pill-tab-active {
-    @apply bg-white text-black shadow-sm ring-1 ring-black/5;
+    @apply bg-white text-foreground shadow-sm ring-1 ring-black/[0.04];
   }
 
   .pill-tab-inactive {
-    @apply text-neutral-dark/60 hover:text-neutral-dark hover:bg-black/5;
+    @apply text-neutral-dark/60 hover:text-foreground hover:bg-black/[0.04];
   }
 
   .chat-pill-container {
-    @apply fixed bottom-8 left-8 w-[calc(40%-3rem)] max-w-lg z-50;
-    @apply bg-[#F4F5F7] rounded-full border border-black/5;
-    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.04), inset 0 1px 1px rgba(255, 255, 255, 0.8);
+    @apply fixed bottom-8 left-8 w-[calc(30%-3rem)] max-w-lg z-50;
+    @apply rounded-full border border-black/[0.04];
+    background: var(--color-neutral-light);
+    box-shadow: 0 4px 20px rgba(60, 50, 40, 0.05), inset 0 1px 1px rgba(255, 255, 255, 0.8);
+  }
+
+  .press-scale {
+    @apply transition-transform duration-100;
+  }
+
+  .press-scale:active {
+    transform: scale(0.97);
   }
 }

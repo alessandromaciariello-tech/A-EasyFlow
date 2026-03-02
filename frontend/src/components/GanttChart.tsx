@@ -17,6 +17,7 @@ import {
   getGanttTemplates,
   applyGanttTemplate,
   deleteGanttTemplate,
+  syncGanttToCalendar,
 } from "@/lib/api";
 import WorkflowBuilder from "./WorkflowBuilder";
 
@@ -25,14 +26,14 @@ const SECTION_ROW_HEIGHT = 44;
 const DAY_WIDTH = 40;
 
 const GANTT_COLORS = [
-  { name: "Blue", value: "#3B82F6" },
-  { name: "Cyan", value: "#06B6D4" },
-  { name: "Purple", value: "#8B5CF6" },
-  { name: "Orange", value: "#F97316" },
-  { name: "Green", value: "#22C55E" },
-  { name: "Red", value: "#EF4444" },
-  { name: "Pink", value: "#EC4899" },
-  { name: "Yellow", value: "#EAB308" },
+  { name: "Forest", value: "#2D6A4F" },
+  { name: "Sage", value: "#5E8C6A" },
+  { name: "Clay", value: "#B4846C" },
+  { name: "Slate", value: "#64748B" },
+  { name: "Olive", value: "#7C8C5E" },
+  { name: "Terracotta", value: "#C17652" },
+  { name: "Storm", value: "#6B7B8E" },
+  { name: "Sand", value: "#C4A882" },
 ];
 
 // --- Helpers ---
@@ -158,9 +159,9 @@ function parseDuration(input: string): number {
   if (!match) return NaN;
   const num = parseFloat(match[1].replace(",", "."));
   const unit = match[2] || "g";
-  if (unit === "m") return num / 1440;        // minutes → days
-  if (unit === "h") return num / 24;           // hours → days
-  return num;                                  // g/d → days
+  if (unit === "m") return num / 1440;        // minutes -> days
+  if (unit === "h") return num / 24;           // hours -> days
+  return num;                                  // g/d -> days
 }
 
 function formatDuration(days: number): string {
@@ -183,10 +184,10 @@ function ProgressRing({ progress, size = 22 }: { progress: number; size?: number
   const radius = (size - 4) / 2;
   const circumference = 2 * Math.PI * radius;
   const offset = circumference - (progress / 100) * circumference;
-  const color = progress === 100 ? "#22C55E" : "#3B82F6";
+  const color = progress === 100 ? "#2D6A4F" : "#5E8C6A";
   return (
     <svg width={size} height={size} className="shrink-0 -rotate-90">
-      <circle cx={size / 2} cy={size / 2} r={radius} fill="none" stroke="#e5e7eb" strokeWidth={2} />
+      <circle cx={size / 2} cy={size / 2} r={radius} fill="none" stroke="#1C1C1C" strokeOpacity={0.1} strokeWidth={2} />
       <circle
         cx={size / 2}
         cy={size / 2}
@@ -253,15 +254,15 @@ function ContextMenu({
   }
 
   return (
-    <div ref={menuRef} className="fixed z-50 min-w-[180px] rounded-lg border border-gray-200 bg-white py-1 shadow-lg" style={style}>
-      <button onClick={onMarkDone} className="flex w-full items-center gap-2 px-3 py-1.5 text-sm text-gray-700 hover:bg-gray-50">
+    <div ref={menuRef} className="fixed z-50 min-w-[180px] rounded-lg border border-black/[0.05] bg-white py-1 shadow-lg" style={style}>
+      <button onClick={onMarkDone} className="flex w-full items-center gap-2 px-3 py-1.5 text-sm text-neutral-dark hover:bg-black/[0.03]">
         <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" d="M9 12.75L11.25 15 15 9.75M21 12a9 9 0 1 1-18 0 9 9 0 0 1 18 0z" /></svg>
         Segna come completata
       </button>
 
       {/* Color submenu */}
       <div className="relative" onMouseEnter={() => setSubMenu("color")} onMouseLeave={() => setSubMenu(null)}>
-        <button className="flex w-full items-center justify-between px-3 py-1.5 text-sm text-gray-700 hover:bg-gray-50">
+        <button className="flex w-full items-center justify-between px-3 py-1.5 text-sm text-neutral-dark hover:bg-black/[0.03]">
           <span className="flex items-center gap-2">
             <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" d="M4.098 19.902a3.75 3.75 0 0 0 5.304 0l6.401-6.402M6.75 21A3.75 3.75 0 0 1 3 17.25V4.125C3 3.504 3.504 3 4.125 3h5.25c.621 0 1.125.504 1.125 1.125v4.072M6.75 21a3.75 3.75 0 0 0 3.75-3.75V8.197M6.75 21h13.125c.621 0 1.125-.504 1.125-1.125v-5.25c0-.621-.504-1.125-1.125-1.125h-4.072" /></svg>
             Colore
@@ -269,7 +270,7 @@ function ContextMenu({
           <svg className="h-3 w-3" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" d="M8.25 4.5l7.5 7.5-7.5 7.5" /></svg>
         </button>
         {subMenu === "color" && (
-          <div className="absolute left-full top-0 ml-1 grid grid-cols-4 gap-1 rounded-lg border border-gray-200 bg-white p-2 shadow-lg">
+          <div className="absolute left-full top-0 ml-1 grid grid-cols-4 gap-1 rounded-lg border border-black/[0.05] bg-white p-2 shadow-lg">
             {GANTT_COLORS.map((c) => (
               <button
                 key={c.value}
@@ -285,7 +286,7 @@ function ContextMenu({
 
       {/* Progress submenu */}
       <div className="relative" onMouseEnter={() => setSubMenu("progress")} onMouseLeave={() => setSubMenu(null)}>
-        <button className="flex w-full items-center justify-between px-3 py-1.5 text-sm text-gray-700 hover:bg-gray-50">
+        <button className="flex w-full items-center justify-between px-3 py-1.5 text-sm text-neutral-dark hover:bg-black/[0.03]">
           <span className="flex items-center gap-2">
             <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" d="M3 13.125C3 12.504 3.504 12 4.125 12h2.25c.621 0 1.125.504 1.125 1.125v6.75C7.5 20.496 6.996 21 6.375 21h-2.25A1.125 1.125 0 0 1 3 19.875v-6.75zM9.75 8.625c0-.621.504-1.125 1.125-1.125h2.25c.621 0 1.125.504 1.125 1.125v11.25c0 .621-.504 1.125-1.125 1.125h-2.25a1.125 1.125 0 0 1-1.125-1.125V8.625zM16.5 4.125c0-.621.504-1.125 1.125-1.125h2.25C20.496 3 21 3.504 21 4.125v15.75c0 .621-.504 1.125-1.125 1.125h-2.25a1.125 1.125 0 0 1-1.125-1.125V4.125z" /></svg>
             Progresso
@@ -293,12 +294,12 @@ function ContextMenu({
           <svg className="h-3 w-3" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" d="M8.25 4.5l7.5 7.5-7.5 7.5" /></svg>
         </button>
         {subMenu === "progress" && (
-          <div className="absolute left-full top-0 ml-1 min-w-[80px] rounded-lg border border-gray-200 bg-white py-1 shadow-lg">
+          <div className="absolute left-full top-0 ml-1 min-w-[80px] rounded-lg border border-black/[0.05] bg-white py-1 shadow-lg">
             {[0, 10, 20, 30, 40, 50, 60, 70, 80, 90, 100].map((p) => (
               <button
                 key={p}
                 onClick={() => onProgressSelect(p)}
-                className="block w-full px-3 py-1 text-left text-sm text-gray-700 hover:bg-gray-50"
+                className="block w-full px-3 py-1 text-left text-sm text-neutral-dark hover:bg-black/[0.03]"
               >
                 {p} %
               </button>
@@ -307,19 +308,19 @@ function ContextMenu({
         )}
       </div>
 
-      <div className="my-1 border-t border-gray-100" />
+      <div className="my-1 border-t border-black/[0.03]" />
 
-      <button onClick={onAddSubtask} className="flex w-full items-center gap-2 px-3 py-1.5 text-sm text-gray-700 hover:bg-gray-50">
+      <button onClick={onAddSubtask} className="flex w-full items-center gap-2 px-3 py-1.5 text-sm text-neutral-dark hover:bg-black/[0.03]">
         <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" d="M12 4.5v15m7.5-7.5h-15" /></svg>
         Aggiungi subtask
       </button>
 
-      <button onClick={onLink} className="flex w-full items-center gap-2 px-3 py-1.5 text-sm text-gray-700 hover:bg-gray-50">
+      <button onClick={onLink} className="flex w-full items-center gap-2 px-3 py-1.5 text-sm text-neutral-dark hover:bg-black/[0.03]">
         <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" d="M13.19 8.688a4.5 4.5 0 0 1 1.242 7.244l-4.5 4.5a4.5 4.5 0 0 1-6.364-6.364l1.757-1.757m9.86-2.54a4.5 4.5 0 0 0-1.242-7.244l-4.5-4.5a4.5 4.5 0 0 0-6.364 6.364L4.343 8.69" /></svg>
         Collega dipendenza
       </button>
 
-      <button onClick={onDuplicate} className="flex w-full items-center gap-2 px-3 py-1.5 text-sm text-gray-700 hover:bg-gray-50">
+      <button onClick={onDuplicate} className="flex w-full items-center gap-2 px-3 py-1.5 text-sm text-neutral-dark hover:bg-black/[0.03]">
         <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" d="M15.75 17.25v3.375c0 .621-.504 1.125-1.125 1.125h-9.75a1.125 1.125 0 0 1-1.125-1.125V7.875c0-.621.504-1.125 1.125-1.125H6.75a9.06 9.06 0 0 1 1.5.124m7.5 10.376h3.375c.621 0 1.125-.504 1.125-1.125V11.25c0-4.46-3.243-8.161-7.5-8.876a9.06 9.06 0 0 0-1.5-.124H9.375c-.621 0-1.125.504-1.125 1.125v3.5m7.5 10.375H9.375a1.125 1.125 0 0 1-1.125-1.125v-9.25m12 6.625v-1.875a3.375 3.375 0 0 0-3.375-3.375h-1.5a1.125 1.125 0 0 1-1.125-1.125v-1.5a3.375 3.375 0 0 0-3.375-3.375H9.75" /></svg>
         Duplica
       </button>
@@ -338,20 +339,29 @@ function AddTaskModal({
   onAdd,
   onClose,
 }: {
-  onAdd: (data: { title: string; duration: number; start_date: string; color: string }) => void;
+  onAdd: (data: { title: string; duration: number; start_date: string; color: string; daily_hours?: number }) => void;
   onClose: () => void;
 }) {
   const [title, setTitle] = useState("");
   const [durationStr, setDurationStr] = useState("3g");
   const [startDate, setStartDate] = useState(todayStr());
+  const [dailyHoursStr, setDailyHoursStr] = useState("");
 
   const parsed = parseDuration(durationStr);
   const isValid = !isNaN(parsed) && parsed > 0;
+  const dailyHours = dailyHoursStr.trim() ? parseFloat(dailyHoursStr) : 0;
+  const dailyHoursValid = dailyHoursStr.trim() === "" || (!isNaN(dailyHours) && dailyHours > 0);
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    if (!title.trim() || !isValid) return;
-    onAdd({ title: title.trim(), duration: parsed, start_date: startDate, color: "#3B82F6" });
+    if (!title.trim() || !isValid || !dailyHoursValid) return;
+    onAdd({
+      title: title.trim(),
+      duration: parsed,
+      start_date: startDate,
+      color: "#2D6A4F",
+      ...(dailyHours > 0 ? { daily_hours: dailyHours } : {}),
+    });
   };
 
   return (
@@ -361,47 +371,58 @@ function AddTaskModal({
         onSubmit={handleSubmit}
         className="w-[340px] rounded-xl bg-white p-5 shadow-xl"
       >
-        <h3 className="mb-4 text-base font-semibold text-gray-900">Nuova Task</h3>
+        <h3 className="mb-4 text-base font-semibold text-foreground">Nuova Task</h3>
 
-        <label className="mb-1 block text-xs font-medium text-gray-600">Titolo</label>
+        <label className="mb-1 block text-xs font-medium text-neutral-dark/70">Titolo</label>
         <input
           autoFocus
           value={title}
           onChange={(e) => setTitle(e.target.value)}
-          className="mb-3 w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:border-blue-500 focus:outline-none"
+          className="mb-3 w-full rounded-lg border border-neutral-dark/15 px-3 py-2 text-sm focus:border-primary/40 focus:ring-primary/20 focus:outline-none"
           placeholder="Nome della task..."
         />
 
-        <div className="mb-4 flex gap-3">
+        <div className="mb-3 flex gap-3">
           <div className="flex-1">
-            <label className="mb-1 block text-xs font-medium text-gray-600">Durata</label>
+            <label className="mb-1 block text-xs font-medium text-neutral-dark/70">Durata</label>
             <input
               value={durationStr}
               onChange={(e) => setDurationStr(e.target.value)}
-              className={`w-full rounded-lg border px-3 py-2 text-sm focus:outline-none ${isValid ? "border-gray-300 focus:border-blue-500" : "border-red-300 focus:border-red-500"}`}
+              className={`w-full rounded-lg border px-3 py-2 text-sm focus:outline-none ${isValid ? "border-neutral-dark/15 focus:border-primary/40 focus:ring-primary/20" : "border-red-300 focus:border-red-500"}`}
               placeholder="es. 3g, 4h, 45m"
             />
-            <span className="mt-0.5 block text-[10px] text-gray-400">m = minuti, h = ore, g = giorni</span>
+            <span className="mt-0.5 block text-[10px] text-neutral-dark/40">m = minuti, h = ore, g = giorni</span>
           </div>
           <div className="flex-1">
-            <label className="mb-1 block text-xs font-medium text-gray-600">Data inizio</label>
+            <label className="mb-1 block text-xs font-medium text-neutral-dark/70">Data inizio</label>
             <input
               type="date"
               value={startDate}
               onChange={(e) => setStartDate(e.target.value)}
-              className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:border-blue-500 focus:outline-none"
+              className="w-full rounded-lg border border-neutral-dark/15 px-3 py-2 text-sm focus:border-primary/40 focus:ring-primary/20 focus:outline-none"
             />
           </div>
         </div>
 
+        <div className="mb-4">
+          <label className="mb-1 block text-xs font-medium text-neutral-dark/70">Ore al giorno</label>
+          <input
+            value={dailyHoursStr}
+            onChange={(e) => setDailyHoursStr(e.target.value)}
+            className={`w-full rounded-lg border px-3 py-2 text-sm focus:outline-none ${dailyHoursValid ? "border-neutral-dark/15 focus:border-primary/40 focus:ring-primary/20" : "border-red-300 focus:border-red-500"}`}
+            placeholder="es. 2"
+          />
+          <span className="mt-0.5 block text-[10px] text-neutral-dark/40">Lascia vuoto per non sincronizzare con il calendario</span>
+        </div>
+
         <div className="flex justify-end gap-2">
-          <button type="button" onClick={onClose} className="rounded-lg px-4 py-2 text-sm text-gray-600 hover:bg-gray-100">
+          <button type="button" onClick={onClose} className="rounded-full px-4 py-2 text-sm text-neutral-dark/70 hover:bg-black/[0.04] press-scale">
             Annulla
           </button>
           <button
             type="submit"
-            disabled={!title.trim() || !isValid}
-            className="rounded-lg bg-blue-600 px-4 py-2 text-sm font-medium text-white hover:bg-blue-700 disabled:opacity-50"
+            disabled={!title.trim() || !isValid || !dailyHoursValid}
+            className="rounded-full bg-primary px-4 py-2 text-sm font-medium text-white hover:bg-primary/90 disabled:opacity-50 press-scale"
           >
             Aggiungi
           </button>
@@ -435,22 +456,22 @@ function AddSectionModal({
         onSubmit={handleSubmit}
         className="w-[320px] rounded-xl bg-white p-5 shadow-xl"
       >
-        <h3 className="mb-4 text-base font-semibold text-gray-900">Nuova Sezione</h3>
+        <h3 className="mb-4 text-base font-semibold text-foreground">Nuova Sezione</h3>
         <input
           autoFocus
           value={title}
           onChange={(e) => setTitle(e.target.value)}
-          className="mb-4 w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:border-blue-500 focus:outline-none"
+          className="mb-4 w-full rounded-lg border border-neutral-dark/15 px-3 py-2 text-sm focus:border-primary/40 focus:ring-primary/20 focus:outline-none"
           placeholder="Nome della sezione..."
         />
         <div className="flex justify-end gap-2">
-          <button type="button" onClick={onClose} className="rounded-lg px-4 py-2 text-sm text-gray-600 hover:bg-gray-100">
+          <button type="button" onClick={onClose} className="rounded-full px-4 py-2 text-sm text-neutral-dark/70 hover:bg-black/[0.04] press-scale">
             Annulla
           </button>
           <button
             type="submit"
             disabled={!title.trim()}
-            className="rounded-lg bg-blue-600 px-4 py-2 text-sm font-medium text-white hover:bg-blue-700 disabled:opacity-50"
+            className="rounded-full bg-primary px-4 py-2 text-sm font-medium text-white hover:bg-primary/90 disabled:opacity-50 press-scale"
           >
             Aggiungi
           </button>
@@ -486,25 +507,25 @@ function TemplateModal({
         onClick={(e) => { e.stopPropagation(); setMenuOpen(null); }}
         className="w-[540px] max-h-[80vh] overflow-y-auto rounded-xl bg-white p-6 shadow-xl"
       >
-        <h3 className="mb-5 text-base font-semibold text-gray-900">Templates</h3>
+        <h3 className="mb-5 text-base font-semibold text-foreground">Templates</h3>
 
         {categories.length === 0 && (
-          <p className="text-sm text-gray-400 text-center py-8">Nessun template disponibile</p>
+          <p className="text-sm text-neutral-dark/40 text-center py-8">Nessun template disponibile</p>
         )}
 
         {categories.map((cat) => (
           <div key={cat.name} className="mb-5">
-            <h4 className="mb-2 text-sm font-semibold text-gray-700">{cat.name}</h4>
+            <h4 className="mb-2 text-sm font-semibold text-neutral-dark">{cat.name}</h4>
             <div className="grid grid-cols-3 gap-3">
               {cat.templates.map((tpl) => (
                 <div
                   key={tpl.id}
                   onClick={() => onSelect(tpl.id)}
-                  className="relative rounded-xl bg-gray-100 p-4 text-left hover:bg-blue-50 hover:ring-2 hover:ring-blue-300 cursor-pointer transition-all group/card"
+                  className="relative rounded-xl bg-neutral-dark/[0.06] p-4 text-left hover:bg-primary/[0.06] hover:ring-2 hover:ring-primary/30 cursor-pointer transition-all group/card"
                 >
                   {/* 3-dot menu top-right */}
                   <span
-                    className="absolute top-2 right-2 rounded-md p-1 text-gray-400 opacity-0 group-hover/card:opacity-100 hover:bg-white hover:text-gray-700 transition-all"
+                    className="absolute top-2 right-2 rounded-md p-1 text-neutral-dark/40 opacity-0 group-hover/card:opacity-100 hover:bg-white hover:text-neutral-dark transition-all"
                     onClick={(e) => { e.stopPropagation(); setMenuOpen(menuOpen === tpl.id ? null : tpl.id); }}
                   >
                     <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor">
@@ -515,11 +536,11 @@ function TemplateModal({
                   {/* Dropdown menu */}
                   {menuOpen === tpl.id && (
                     <div
-                      className="absolute top-8 right-2 z-10 w-32 rounded-lg bg-white shadow-lg border border-gray-200 py-1"
+                      className="absolute top-8 right-2 z-10 w-32 rounded-lg bg-white shadow-lg border border-black/[0.05] py-1"
                       onClick={(e) => e.stopPropagation()}
                     >
                       <button
-                        className="flex w-full items-center gap-2 px-3 py-1.5 text-xs text-gray-700 hover:bg-gray-100 transition-colors"
+                        className="flex w-full items-center gap-2 px-3 py-1.5 text-xs text-neutral-dark hover:bg-black/[0.04] transition-colors"
                         onClick={() => { setMenuOpen(null); onEdit(tpl.id); }}
                       >
                         <svg className="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor">
@@ -539,14 +560,14 @@ function TemplateModal({
                     </div>
                   )}
 
-                  <span className="block text-sm font-medium text-gray-800 pr-5">{tpl.name}</span>
-                  <span className="mt-1 block text-xs text-gray-500">{tpl.description}</span>
+                  <span className="block text-sm font-medium text-foreground pr-5">{tpl.name}</span>
+                  <span className="mt-1 block text-xs text-neutral-dark/60">{tpl.description}</span>
                 </div>
               ))}
               {/* "+" card to create new template in this category */}
               <button
                 onClick={() => onCreate(cat.name)}
-                className="flex flex-col items-center justify-center rounded-xl border-2 border-dashed border-gray-300 p-4 text-gray-400 hover:border-blue-400 hover:bg-blue-50 hover:text-blue-600 cursor-pointer transition-all"
+                className="flex flex-col items-center justify-center rounded-xl border-2 border-dashed border-neutral-dark/15 p-4 text-neutral-dark/40 hover:border-primary/40 hover:bg-primary/[0.06] hover:text-primary cursor-pointer transition-all press-scale"
               >
                 <svg className="h-6 w-6 mb-1" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor">
                   <path strokeLinecap="round" strokeLinejoin="round" d="M12 4.5v15m7.5-7.5h-15" />
@@ -560,7 +581,7 @@ function TemplateModal({
         <div className="mt-4 flex justify-end">
           <button
             onClick={onClose}
-            className="rounded-lg px-4 py-2 text-sm text-gray-600 hover:bg-gray-100"
+            className="rounded-full px-4 py-2 text-sm text-neutral-dark/70 hover:bg-black/[0.04] press-scale"
           >
             Chiudi
           </button>
@@ -574,18 +595,18 @@ function TemplateModal({
             onClick={(e) => e.stopPropagation()}
             className="w-80 rounded-xl bg-white p-5 shadow-2xl"
           >
-            <h4 className="text-sm font-semibold text-gray-900 mb-2">Eliminare template?</h4>
-            <p className="text-xs text-gray-500 mb-4">Questa azione non può essere annullata.</p>
+            <h4 className="text-sm font-semibold text-foreground mb-2">Eliminare template?</h4>
+            <p className="text-xs text-neutral-dark/60 mb-4">Questa azione non può essere annullata.</p>
             <div className="flex justify-end gap-2">
               <button
                 onClick={() => setConfirmDelete(null)}
-                className="rounded-lg px-3 py-1.5 text-sm text-gray-600 hover:bg-gray-100 transition-colors"
+                className="rounded-full px-3 py-1.5 text-sm text-neutral-dark/70 hover:bg-black/[0.04] transition-colors press-scale"
               >
                 Annulla
               </button>
               <button
                 onClick={() => { onDelete(confirmDelete); setConfirmDelete(null); }}
-                className="rounded-lg bg-red-600 px-3 py-1.5 text-sm font-medium text-white hover:bg-red-700 transition-colors"
+                className="rounded-full bg-red-600 px-3 py-1.5 text-sm font-medium text-white hover:bg-red-700 transition-colors press-scale"
               >
                 Elimina
               </button>
@@ -714,10 +735,14 @@ export default function GanttChart() {
     return GANTT_COLORS[idx % GANTT_COLORS.length].value;
   };
 
-  const handleAddTask = async (sectionId: string, data: { title: string; duration: number; start_date: string; color: string }) => {
+  const handleAddTask = async (sectionId: string, data: { title: string; duration: number; start_date: string; color: string; daily_hours?: number }) => {
     await createGanttTask(sectionId, { ...data, color: getSectionColor(sectionId) });
     setAddTaskFor(null);
     fetchProject();
+    // Fire-and-forget: sync to calendar if daily_hours was set
+    if (data.daily_hours && data.daily_hours > 0) {
+      syncGanttToCalendar().catch(() => {});
+    }
   };
 
   const handleAddSubtask = async (
@@ -1007,7 +1032,11 @@ export default function GanttChart() {
   if (loading) {
     return (
       <div className="flex h-full items-center justify-center">
-        <div className="text-sm text-gray-400">Caricamento Gantt...</div>
+        <div className="space-y-3 w-[320px]">
+          <div className="h-4 rounded-full bg-neutral-dark/[0.06] animate-pulse" />
+          <div className="h-4 rounded-full bg-neutral-dark/[0.06] animate-pulse w-3/4" />
+          <div className="h-4 rounded-full bg-neutral-dark/[0.06] animate-pulse w-1/2" />
+        </div>
       </div>
     );
   }
@@ -1016,14 +1045,14 @@ export default function GanttChart() {
     <div className="flex h-full flex-col">
       {/* Linking mode banner */}
       {linkingFrom && (
-        <div className="flex items-center justify-between bg-blue-50 border-b border-blue-200 px-4 py-2">
-          <span className="text-sm text-blue-700">Clicca su una task per creare la dipendenza — ESC per annullare</span>
-          <button onClick={() => setLinkingFrom(null)} className="text-xs text-blue-600 hover:text-blue-800 font-medium">Annulla</button>
+        <div className="flex items-center justify-between bg-primary/[0.06] border-b border-primary/20 px-4 py-2">
+          <span className="text-sm text-primary">Clicca su una task per creare la dipendenza — ESC per annullare</span>
+          <button onClick={() => setLinkingFrom(null)} className="text-xs text-primary hover:text-primary/80 font-medium">Annulla</button>
         </div>
       )}
 
       {/* Header */}
-      <div className="flex items-center justify-between border-b border-black/5 px-8 py-6">
+      <div className="flex items-center justify-between border-b border-black/[0.04] px-8 py-6">
         <div>
           <h2 className="text-xl font-bold text-foreground">{project?.name || "Gantt Chart"}</h2>
           <p className="text-xs text-neutral-dark/40 font-bold uppercase tracking-widest mt-0.5">Project Timeline</p>
@@ -1031,7 +1060,7 @@ export default function GanttChart() {
         <div className="flex gap-3">
           <button
             onClick={() => setShowAddSection(true)}
-            className="flex items-center gap-2 rounded-xl bg-black px-4 py-2 text-xs font-bold text-white hover:bg-primary transition-all shadow-sm active:scale-95"
+            className="flex items-center gap-2 rounded-full bg-black px-4 py-2 text-xs font-bold text-white hover:bg-primary transition-all shadow-sm press-scale"
           >
             <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" strokeWidth={2.5} stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" d="M12 4.5v15m7.5-7.5h-15" /></svg>
             Add Section
@@ -1043,15 +1072,15 @@ export default function GanttChart() {
       <div className="flex-1 overflow-auto">
         <div className="flex min-w-max">
           {/* ===== LEFT TABLE (sticky) ===== */}
-          <div className="sticky left-0 z-10 w-[400px] shrink-0 border-r border-gray-200 bg-white">
+          <div className="sticky left-0 z-10 w-[400px] shrink-0 border-r border-black/[0.05] bg-white">
             {/* Table header */}
             <div
-              className="flex items-center border-b border-gray-200 bg-gray-50 px-3 text-xs font-medium uppercase text-gray-500"
+              className="flex items-center border-b border-black/[0.05] bg-neutral-light/50 px-3 text-xs font-medium uppercase text-neutral-dark/60"
               style={{ height: `${ROW_HEIGHT * 2}px` }}
             >
               <input
                 type="checkbox"
-                className="mr-2 h-3.5 w-3.5 rounded border-gray-300 accent-blue-600 cursor-pointer"
+                className="mr-2 h-3.5 w-3.5 rounded border-neutral-dark/15 accent-primary cursor-pointer"
                 checked={rows.length > 0 && selected.size === rows.length}
                 onChange={() => {
                   if (selected.size === rows.length) setSelected(new Set());
@@ -1065,8 +1094,8 @@ export default function GanttChart() {
 
             {/* Selection action bar */}
             {selected.size > 0 && (
-              <div className="flex items-center gap-3 border-b border-gray-200 bg-white px-3 py-1.5">
-                <span className="text-xs font-semibold text-blue-600">{selected.size} selezionat{selected.size === 1 ? "o" : "i"}</span>
+              <div className="flex items-center gap-3 border-b border-black/[0.05] bg-white px-3 py-1.5">
+                <span className="text-xs font-semibold text-primary">{selected.size} selezionat{selected.size === 1 ? "o" : "i"}</span>
                 <button
                   onClick={handleBatchDelete}
                   className="flex items-center gap-1 rounded px-2 py-1 text-xs text-red-600 hover:bg-red-50 font-medium"
@@ -1076,7 +1105,7 @@ export default function GanttChart() {
                 </button>
                 <button
                   onClick={() => setSelected(new Set())}
-                  className="ml-auto rounded p-1 text-gray-400 hover:text-gray-600"
+                  className="ml-auto rounded p-1 text-neutral-dark/40 hover:text-neutral-dark/70"
                 >
                   <svg className="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" /></svg>
                 </button>
@@ -1090,18 +1119,18 @@ export default function GanttChart() {
                 return (
                   <div
                     key={`s-${section.id}`}
-                    className={`flex items-center border-b border-gray-100 bg-gray-50/70 px-3 group ${selected.has(section.id) ? "!bg-blue-50/50" : ""}`}
+                    className={`flex items-center border-b border-black/[0.03] bg-neutral-light/50 px-3 group ${selected.has(section.id) ? "!bg-primary/[0.06]" : ""}`}
                     style={{ height: `${SECTION_ROW_HEIGHT}px` }}
                   >
                     <input
                       type="checkbox"
-                      className="mr-2 h-3.5 w-3.5 rounded border-gray-300 accent-blue-600 cursor-pointer"
+                      className="mr-2 h-3.5 w-3.5 rounded border-neutral-dark/15 accent-primary cursor-pointer"
                       checked={selected.has(section.id)}
                       onChange={() => toggleSelect(section.id)}
                     />
                     <button
                       onClick={() => handleToggleSection(section.id, !section.collapsed)}
-                      className="mr-2 text-gray-400 hover:text-gray-600"
+                      className="mr-2 text-neutral-dark/40 hover:text-neutral-dark/70"
                     >
                       <svg
                         className={`h-4 w-4 transition-transform ${section.collapsed ? "" : "rotate-90"}`}
@@ -1113,26 +1142,26 @@ export default function GanttChart() {
                         <path strokeLinecap="round" strokeLinejoin="round" d="M8.25 4.5l7.5 7.5-7.5 7.5" />
                       </svg>
                     </button>
-                    <span className="flex-1 text-sm font-semibold text-gray-800">{section.title}</span>
-                    <span className="w-20 text-center text-xs text-gray-500">
-                      {stats.totalDays > 0 ? formatDuration(stats.totalDays) : "—"}
+                    <span className="flex-1 text-sm font-semibold text-foreground">{section.title}</span>
+                    <span className="w-20 text-center text-xs text-neutral-dark/60">
+                      {stats.totalDays > 0 ? formatDuration(stats.totalDays) : "\u2014"}
                     </span>
                     <div className="flex w-20 items-center justify-center gap-1.5">
-                      <span className="text-xs text-gray-500">{stats.avgProgress}%</span>
+                      <span className="text-xs text-neutral-dark/60">{stats.avgProgress}%</span>
                       <ProgressRing progress={stats.avgProgress} />
                     </div>
                     {/* Section actions (visible on hover) */}
                     <div className="ml-1 flex gap-0.5 opacity-0 group-hover:opacity-100 transition-opacity">
                       <button
                         onClick={() => setAddTaskFor(section.id)}
-                        className="rounded p-1 text-gray-400 hover:bg-gray-200 hover:text-gray-600"
+                        className="rounded p-1 text-neutral-dark/40 hover:bg-black/[0.06] hover:text-neutral-dark/70"
                         title="Aggiungi task"
                       >
                         <svg className="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" d="M12 4.5v15m7.5-7.5h-15" /></svg>
                       </button>
                       <button
                         onClick={() => handleDeleteSection(section.id)}
-                        className="rounded p-1 text-gray-400 hover:bg-red-100 hover:text-red-500"
+                        className="rounded p-1 text-neutral-dark/40 hover:bg-red-100 hover:text-red-500"
                         title="Elimina sezione"
                       >
                         <svg className="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" /></svg>
@@ -1150,7 +1179,7 @@ export default function GanttChart() {
               return (
                 <div
                   key={`t-${task.id}`}
-                  className={`flex items-center border-b border-gray-50 pr-3 hover:bg-blue-50/30 group cursor-context-menu ${selected.has(task.id) ? "!bg-blue-50/50" : ""}`}
+                  className={`flex items-center border-b border-black/[0.03] pr-3 hover:bg-primary/[0.04] group cursor-context-menu ${selected.has(task.id) ? "!bg-primary/[0.06]" : ""}`}
                   style={{ height: `${ROW_HEIGHT}px`, paddingLeft: `${indentPx}px` }}
                   onContextMenu={(e) => {
                     e.preventDefault();
@@ -1159,7 +1188,7 @@ export default function GanttChart() {
                 >
                   <input
                     type="checkbox"
-                    className="mr-1 h-3.5 w-3.5 rounded border-gray-300 accent-blue-600 cursor-pointer shrink-0"
+                    className="mr-1 h-3.5 w-3.5 rounded border-neutral-dark/15 accent-primary cursor-pointer shrink-0"
                     checked={selected.has(task.id)}
                     onChange={() => toggleSelect(task.id)}
                   />
@@ -1167,7 +1196,7 @@ export default function GanttChart() {
                   {hasChildren ? (
                     <button
                       onClick={() => handleUpdateTask(section.id, task.id, { collapsed: !task.collapsed })}
-                      className="mr-1 text-gray-400 hover:text-gray-600"
+                      className="mr-1 text-neutral-dark/40 hover:text-neutral-dark/70"
                     >
                       <svg
                         className={`h-3.5 w-3.5 transition-transform ${task.collapsed ? "" : "rotate-90"}`}
@@ -1186,7 +1215,7 @@ export default function GanttChart() {
                   {/* Checkbox — complete = auto-delete */}
                   <button
                     onClick={() => handleDeleteTask(section.id, task.id)}
-                    className="mr-2 flex h-4.5 w-4.5 shrink-0 items-center justify-center rounded-full border-2 transition-colors border-gray-300 hover:border-green-500 hover:bg-green-500 hover:text-white"
+                    className="mr-2 flex h-4.5 w-4.5 shrink-0 items-center justify-center rounded-full border-2 transition-colors border-neutral-dark/30 hover:border-green-500 hover:bg-green-500 hover:text-white"
                     style={{ borderColor: task.color + "88" }}
                     title="Segna come completata"
                   />
@@ -1200,11 +1229,11 @@ export default function GanttChart() {
                         onChange={(e) => setEditValue(e.target.value)}
                         onBlur={handleInlineEditSave}
                         onKeyDown={(e) => { if (e.key === "Enter") handleInlineEditSave(); if (e.key === "Escape") setEditingCell(null); }}
-                        className="w-full rounded border border-blue-400 px-1 py-0.5 text-sm focus:outline-none"
+                        className="w-full rounded border border-primary/40 px-1 py-0.5 text-sm focus:outline-none focus:ring-primary/20"
                       />
                     ) : (
                       <span
-                        className={`block truncate text-sm ${task.progress === 100 ? "text-gray-400 line-through" : "text-gray-700"}`}
+                        className={`block truncate text-sm ${task.progress === 100 ? "text-neutral-dark/40 line-through" : "text-neutral-dark"}`}
                         onDoubleClick={() => { setEditingCell({ sectionId: section.id, taskId: task.id, field: "title" }); setEditValue(task.title); }}
                       >
                         {task.title}
@@ -1221,12 +1250,12 @@ export default function GanttChart() {
                         onChange={(e) => setEditValue(e.target.value)}
                         onBlur={handleInlineEditSave}
                         onKeyDown={(e) => { if (e.key === "Enter") handleInlineEditSave(); if (e.key === "Escape") setEditingCell(null); }}
-                        className="w-16 rounded border border-blue-400 px-1 py-0.5 text-center text-xs focus:outline-none"
+                        className="w-16 rounded border border-primary/40 px-1 py-0.5 text-center text-xs focus:outline-none focus:ring-primary/20"
                         placeholder="3g, 4h, 45m"
                       />
                     ) : (
                       <span
-                        className={`text-xs text-gray-500 ${hasChildren ? "" : "cursor-text"}`}
+                        className={`text-xs text-neutral-dark/60 ${hasChildren ? "" : "cursor-text"}`}
                         onDoubleClick={hasChildren ? undefined : () => { setEditingCell({ sectionId: section.id, taskId: task.id, field: "duration" }); setEditValue(formatDuration(task.duration)); }}
                       >
                         {hasChildren ? (() => {
@@ -1239,14 +1268,14 @@ export default function GanttChart() {
 
                   {/* Progress */}
                   <div className="flex w-20 items-center justify-center gap-1.5">
-                    <span className="text-xs text-gray-500">{task.progress}%</span>
+                    <span className="text-xs text-neutral-dark/60">{task.progress}%</span>
                     <ProgressRing progress={task.progress} />
                   </div>
 
                   {/* Add subtask button (visible on hover) */}
                   <button
                     onClick={() => setAddSubtaskFor({ sectionId: section.id, parentTaskId: task.id })}
-                    className="ml-1 rounded p-0.5 text-gray-400 opacity-0 group-hover:opacity-100 hover:bg-gray-200 hover:text-gray-600 transition-opacity"
+                    className="ml-1 rounded p-0.5 text-neutral-dark/40 opacity-0 group-hover:opacity-100 hover:bg-black/[0.06] hover:text-neutral-dark/70 transition-opacity"
                     title="Aggiungi subtask"
                   >
                     <svg className="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" d="M12 4.5v15m7.5-7.5h-15" /></svg>
@@ -1265,21 +1294,21 @@ export default function GanttChart() {
                     setShowAddSection(true);
                   }
                 }}
-                className="flex items-center gap-1 text-xs text-gray-400 hover:text-blue-600"
+                className="flex items-center gap-1 text-xs text-neutral-dark/40 hover:text-primary"
               >
                 <svg className="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" d="M12 4.5v15m7.5-7.5h-15" /></svg>
                 Task
               </button>
               <button
                 onClick={() => setShowAddSection(true)}
-                className="flex items-center gap-1 text-xs text-gray-400 hover:text-blue-600"
+                className="flex items-center gap-1 text-xs text-neutral-dark/40 hover:text-primary"
               >
                 <svg className="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" d="M12 4.5v15m7.5-7.5h-15" /></svg>
                 Sezione
               </button>
               <button
                 onClick={() => setShowTemplates(true)}
-                className="flex items-center gap-1 text-xs text-gray-400 hover:text-blue-600"
+                className="flex items-center gap-1 text-xs text-neutral-dark/40 hover:text-primary"
               >
                 <svg className="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" d="M3.75 9.776c.112-.017.227-.026.344-.026h15.812c.117 0 .232.009.344.026m-16.5 0a2.25 2.25 0 0 0-1.883 2.542l.857 6a2.25 2.25 0 0 0 2.227 1.932H19.05a2.25 2.25 0 0 0 2.227-1.932l.857-6a2.25 2.25 0 0 0-1.883-2.542m-16.5 0V6A2.25 2.25 0 0 1 6 3.75h3.879a1.5 1.5 0 0 1 1.06.44l2.122 2.12a1.5 1.5 0 0 0 1.06.44H18A2.25 2.25 0 0 1 20.25 9v.776" /></svg>
                 Template
@@ -1290,13 +1319,13 @@ export default function GanttChart() {
           {/* ===== RIGHT TIMELINE ===== */}
           <div className="flex-1">
             {/* Timeline header (month + day rows) */}
-            <div style={{ height: `${ROW_HEIGHT * 2}px` }} className="border-b border-gray-200">
+            <div style={{ height: `${ROW_HEIGHT * 2}px` }} className="border-b border-black/[0.05]">
               {/* Month row */}
               <div className="flex" style={{ height: `${ROW_HEIGHT}px` }}>
                 {months.map((m, i) => (
                   <div
                     key={i}
-                    className="flex items-center border-r border-gray-100 px-2 text-xs font-medium text-gray-600 bg-gray-50"
+                    className="flex items-center border-r border-black/[0.03] px-2 text-xs font-medium text-neutral-dark/70 bg-neutral-light/50"
                     style={{ width: `${m.span * DAY_WIDTH}px` }}
                   >
                     {m.label}
@@ -1310,7 +1339,7 @@ export default function GanttChart() {
                   return (
                     <div
                       key={day}
-                      className={`flex flex-col items-center justify-center border-r border-gray-100 text-[10px] ${isToday ? "bg-blue-50 font-bold text-blue-600" : "text-gray-400"
+                      className={`flex flex-col items-center justify-center border-r border-black/[0.03] text-[10px] ${isToday ? "bg-primary/[0.06] font-bold text-primary" : "text-neutral-dark/40"
                         }`}
                       style={{ width: `${DAY_WIDTH}px` }}
                     >
@@ -1365,7 +1394,7 @@ export default function GanttChart() {
                   <svg className="absolute inset-0 pointer-events-none z-[4]" style={{ width: "100%", height: `${totalH}px` }}>
                     <defs>
                       <marker id="arrowhead" markerWidth="8" markerHeight="6" refX="8" refY="3" orient="auto">
-                        <path d="M0,0 L8,3 L0,6 Z" fill="#6B7280" />
+                        <path d="M0,0 L8,3 L0,6 Z" fill="#1C1C1C" fillOpacity={0.45} />
                       </marker>
                     </defs>
                     {arrows.map(({ fromId, toId }) => {
@@ -1387,7 +1416,8 @@ export default function GanttChart() {
                             : `M${x1},${y1} L${x1 + 10},${y1} L${x1 + 10},${y1 + (y2 > y1 ? 18 : -18)} L${x2 - 10},${y2 + (y2 > y1 ? -18 : 18)} L${x2 - 10},${y2} L${x2},${y2}`
                           }
                           fill="none"
-                          stroke="#6B7280"
+                          stroke="#1C1C1C"
+                          strokeOpacity={0.35}
                           strokeWidth={1.5}
                           markerEnd="url(#arrowhead)"
                         />
@@ -1409,13 +1439,13 @@ export default function GanttChart() {
                   return (
                     <div
                       key={`ts-${section.id}`}
-                      className="relative border-b border-gray-100 bg-gray-50/30"
+                      className="relative border-b border-black/[0.03] bg-neutral-light/30"
                       style={{ height: `${SECTION_ROW_HEIGHT}px` }}
                     >
                       {/* Day grid lines */}
                       <div className="absolute inset-0 flex pointer-events-none">
                         {days.map((day) => (
-                          <div key={day} className="border-r border-gray-50" style={{ width: `${DAY_WIDTH}px` }} />
+                          <div key={day} className="border-r border-black/[0.03]" style={{ width: `${DAY_WIDTH}px` }} />
                         ))}
                       </div>
                       {hasRange && (
@@ -1457,18 +1487,18 @@ export default function GanttChart() {
                 return (
                   <div
                     key={`tt-${task.id}`}
-                    className="relative border-b border-gray-50"
+                    className="relative border-b border-black/[0.03]"
                     style={{ height: `${ROW_HEIGHT}px` }}
                   >
                     {/* Day grid lines */}
                     <div className="absolute inset-0 flex pointer-events-none">
                       {days.map((day) => (
-                        <div key={day} className="border-r border-gray-50" style={{ width: `${DAY_WIDTH}px` }} />
+                        <div key={day} className="border-r border-black/[0.03]" style={{ width: `${DAY_WIDTH}px` }} />
                       ))}
                     </div>
                     {/* Task bar */}
                     <div
-                      className={`absolute top-1.5 flex items-center rounded-md group/bar ${linkingFrom ? (linkingFrom.taskId === task.id ? "ring-2 ring-blue-500 cursor-default" : "cursor-pointer hover:ring-2 hover:ring-green-400") : (isDragging ? "opacity-80 shadow-lg" : "cursor-grab")
+                      className={`absolute top-1.5 flex items-center rounded-md group/bar ${linkingFrom ? (linkingFrom.taskId === task.id ? "ring-2 ring-primary/30 cursor-default" : "cursor-pointer hover:ring-2 hover:ring-green-400") : (isDragging ? "opacity-80 shadow-lg" : "cursor-grab")
                         }`}
                       style={{
                         left: `${displayLeft}px`,
@@ -1542,7 +1572,7 @@ export default function GanttChart() {
                         onMouseDown={(e) => { e.stopPropagation(); e.preventDefault(); }}
                       >
                         <button
-                          className="h-[12px] w-[12px] rounded-full border-2 border-gray-400 bg-white hover:border-blue-500 hover:bg-blue-500 hover:scale-125 transition-all cursor-crosshair"
+                          className="h-[12px] w-[12px] rounded-full border-2 border-neutral-dark/40 bg-white hover:border-primary hover:bg-primary hover:scale-125 transition-all cursor-crosshair"
                           onMouseDown={(e) => { e.stopPropagation(); e.preventDefault(); }}
                           onClick={(e) => {
                             e.stopPropagation();

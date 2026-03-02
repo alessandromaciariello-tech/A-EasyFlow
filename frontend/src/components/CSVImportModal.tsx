@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useRef, useCallback } from "react";
+import { X } from "@phosphor-icons/react";
 import { importDDMRPCSV, type CSVImportResult } from "@/lib/ddmrp/api";
 
 interface CSVImportModalProps {
@@ -82,19 +83,19 @@ export default function CSVImportModal({ onClose, onImported }: CSVImportModalPr
   const info = TAB_INFO[tab];
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/30 backdrop-blur-sm">
-      <div className="w-full max-w-2xl rounded-2xl bg-white shadow-xl border border-black/5">
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/25 backdrop-blur-sm">
+      <div className="w-full max-w-2xl rounded-2xl bg-white shadow-xl border border-black/[0.04]">
         {/* Header */}
-        <div className="flex items-center justify-between px-6 py-4 border-b border-black/5">
+        <div className="flex items-center justify-between px-6 py-4 border-b border-black/[0.04]">
           <h2 className="text-lg font-bold text-foreground">Import CSV</h2>
-          <button onClick={onClose} className="text-neutral-dark/40 hover:text-foreground text-xl leading-none">
-            &times;
+          <button onClick={onClose} className="text-neutral-dark/40 hover:text-foreground leading-none">
+            <X size={20} weight="bold" />
           </button>
         </div>
 
         {/* Tabs */}
         <div className="px-6 pt-4">
-          <div className="flex gap-1 p-1 bg-black/5 rounded-full w-fit">
+          <div className="flex gap-1 p-1 bg-neutral-dark/[0.06] rounded-full w-fit">
             {(Object.keys(TAB_INFO) as ImportTab[]).map((t) => (
               <button
                 key={t}
@@ -122,7 +123,7 @@ export default function CSVImportModal({ onClose, onImported }: CSVImportModalPr
               onDrop={handleDrop}
               onClick={() => inputRef.current?.click()}
               className={`flex flex-col items-center justify-center h-32 border-2 border-dashed rounded-xl cursor-pointer transition-colors ${
-                dragOver ? "border-primary bg-primary/5" : "border-black/10 hover:border-black/20"
+                dragOver ? "border-primary bg-primary/[0.06]" : "border-black/[0.06] hover:border-black/[0.12]"
               }`}
             >
               <svg className="w-8 h-8 text-neutral-dark/30 mb-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -156,7 +157,7 @@ export default function CSVImportModal({ onClose, onImported }: CSVImportModalPr
 
               {/* Preview table */}
               {preview.length > 0 && (
-                <div className="overflow-x-auto rounded-lg border border-black/5">
+                <div className="overflow-x-auto rounded-lg border border-black/[0.04]">
                   <table className="w-full text-xs">
                     <thead>
                       <tr className="bg-black/[0.02]">
@@ -169,7 +170,7 @@ export default function CSVImportModal({ onClose, onImported }: CSVImportModalPr
                     </thead>
                     <tbody>
                       {preview.slice(1, 6).map((row, ri) => (
-                        <tr key={ri} className="border-t border-black/5">
+                        <tr key={ri} className="border-t border-black/[0.04]">
                           {row.map((c, ci) => (
                             <td key={ci} className="px-3 py-1.5 text-neutral-dark/70">
                               {c}
@@ -207,7 +208,7 @@ export default function CSVImportModal({ onClose, onImported }: CSVImportModalPr
         </div>
 
         {/* Footer */}
-        <div className="flex justify-end gap-2 px-6 py-4 border-t border-black/5">
+        <div className="flex justify-end gap-2 px-6 py-4 border-t border-black/[0.04]">
           <button
             onClick={onClose}
             className="px-4 py-2 text-sm font-medium text-neutral-dark/60 hover:text-foreground rounded-lg"
@@ -218,7 +219,7 @@ export default function CSVImportModal({ onClose, onImported }: CSVImportModalPr
             <button
               onClick={handleImport}
               disabled={!file || importing}
-              className="px-4 py-2 text-sm font-medium text-white bg-foreground rounded-lg hover:bg-foreground/90 disabled:opacity-40 disabled:cursor-not-allowed"
+              className="px-4 py-2 text-sm font-medium text-white bg-primary rounded-full press-scale hover:bg-primary/90 disabled:opacity-40 disabled:cursor-not-allowed"
             >
               {importing ? "Importing..." : "Import"}
             </button>
@@ -226,7 +227,7 @@ export default function CSVImportModal({ onClose, onImported }: CSVImportModalPr
           {result && result.imported > 0 && (
             <button
               onClick={resetState}
-              className="px-4 py-2 text-sm font-medium text-white bg-foreground rounded-lg hover:bg-foreground/90"
+              className="px-4 py-2 text-sm font-medium text-white bg-primary rounded-full press-scale hover:bg-primary/90"
             >
               Import Another
             </button>

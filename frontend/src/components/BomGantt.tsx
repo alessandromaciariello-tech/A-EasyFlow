@@ -226,9 +226,9 @@ export default function BomGantt({ data, onChanged }: BomGanttProps) {
   const [editingProduct, setEditingProduct] = useState<string | null>(null);
   const [editProductName, setEditProductName] = useState("");
   const [addingChild, setAddingChild] = useState<{ parentId: string; productId: string } | null>(null);
-  const [childForm, setChildForm] = useState<ItemFormData>({ name: "", quantity: 1, supplier: "", unit_cost: 0 });
+  const [childForm, setChildForm] = useState<ItemFormData>({ name: "", quantity: 1, supplier: "", unit_cost: 0, moq: 1, sku: "" });
   const [editingItem, setEditingItem] = useState<{ itemId: string; productId: string } | null>(null);
-  const [editForm, setEditForm] = useState<ItemFormData>({ name: "", quantity: 1, supplier: "", unit_cost: 0 });
+  const [editForm, setEditForm] = useState<ItemFormData>({ name: "", quantity: 1, supplier: "", unit_cost: 0, moq: 1, sku: "" });
   const [workflowItem, setWorkflowItem] = useState<{ itemId: string; productId: string } | null>(null);
   const [suppliers, setSuppliers] = useState<Supplier[]>(data.suppliers || []);
   const [templates, setTemplates] = useState<RestockTemplate[]>(data.restock_templates || []);
@@ -238,7 +238,7 @@ export default function BomGantt({ data, onChanged }: BomGanttProps) {
     setTemplates(data.restock_templates || []);
   }, [data]);
 
-  const emptyForm: ItemFormData = { name: "", quantity: 1, supplier: "", unit_cost: 0 };
+  const emptyForm: ItemFormData = { name: "", quantity: 1, supplier: "", unit_cost: 0, moq: 1, sku: "" };
 
   // --- Product color (like Gantt section color) ---
   const getProductColor = (productId: string) => {
@@ -289,6 +289,8 @@ export default function BomGantt({ data, onChanged }: BomGanttProps) {
       quantity: childForm.quantity,
       supplier: childForm.supplier,
       unit_cost: childForm.unit_cost,
+      moq: childForm.moq,
+      sku: childForm.sku,
     });
     setAddingChild(null);
     setChildForm(emptyForm);
@@ -307,6 +309,8 @@ export default function BomGantt({ data, onChanged }: BomGanttProps) {
       quantity: item.quantity,
       supplier: item.supplier,
       unit_cost: item.unit_cost,
+      moq: item.moq ?? 1,
+      sku: item.sku ?? "",
     });
   };
 
@@ -433,15 +437,15 @@ export default function BomGantt({ data, onChanged }: BomGanttProps) {
       <div className="flex-1 overflow-auto">
         <div className="flex min-w-max">
           {/* ===== LEFT PANEL (sticky) ===== */}
-          <div className="sticky left-0 z-10 w-[400px] shrink-0 border-r border-gray-200 bg-white">
+          <div className="sticky left-0 z-10 w-[400px] shrink-0 border-r border-black/[0.05] bg-white">
             {/* Header */}
             <div
-              className="flex items-center border-b border-gray-200 bg-gray-50 px-3 text-xs font-medium uppercase text-gray-500"
+              className="flex items-center border-b border-black/[0.05] bg-neutral-light/50 px-3 text-xs font-medium uppercase text-neutral-dark/60"
               style={{ height: `${ROW_HEIGHT * 2}px` }}
             >
               <input
                 type="checkbox"
-                className="mr-2 h-3.5 w-3.5 rounded border-gray-300 accent-blue-600 cursor-pointer"
+                className="mr-2 h-3.5 w-3.5 rounded border-neutral-dark/15 accent-primary cursor-pointer"
                 checked={rows.length > 0 && selected.size === rows.length}
                 onChange={() => {
                   if (selected.size === rows.length) setSelected(new Set());
@@ -455,8 +459,8 @@ export default function BomGantt({ data, onChanged }: BomGanttProps) {
 
             {/* Selection action bar */}
             {selected.size > 0 && (
-              <div className="flex items-center gap-3 border-b border-gray-200 bg-white px-3 py-1.5">
-                <span className="text-xs font-semibold text-blue-600">{selected.size} selezionat{selected.size === 1 ? "o" : "i"}</span>
+              <div className="flex items-center gap-3 border-b border-black/[0.05] bg-white px-3 py-1.5">
+                <span className="text-xs font-semibold text-primary">{selected.size} selezionat{selected.size === 1 ? "o" : "i"}</span>
                 <button
                   onClick={handleBatchDelete}
                   className="flex items-center gap-1 rounded px-2 py-1 text-xs text-red-600 hover:bg-red-50 font-medium"
@@ -466,7 +470,7 @@ export default function BomGantt({ data, onChanged }: BomGanttProps) {
                 </button>
                 <button
                   onClick={() => setSelected(new Set())}
-                  className="ml-auto rounded p-1 text-gray-400 hover:text-gray-600"
+                  className="ml-auto rounded p-1 text-neutral-dark/40 hover:text-neutral-dark/70"
                 >
                   <svg className="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" /></svg>
                 </button>
@@ -484,18 +488,18 @@ export default function BomGantt({ data, onChanged }: BomGanttProps) {
                 return (
                   <div key={`p-${product.id}`}>
                     <div
-                      className={`flex items-center border-b border-gray-100 bg-gray-50/70 px-3 group ${selected.has(product.id) ? "!bg-blue-50/50" : ""}`}
+                      className={`flex items-center border-b border-black/[0.03] bg-neutral-light/50 px-3 group ${selected.has(product.id) ? "!bg-primary/[0.06]" : ""}`}
                       style={{ height: `${SECTION_ROW_HEIGHT}px` }}
                     >
                       <input
                         type="checkbox"
-                        className="mr-2 h-3.5 w-3.5 rounded border-gray-300 accent-blue-600 cursor-pointer"
+                        className="mr-2 h-3.5 w-3.5 rounded border-neutral-dark/15 accent-primary cursor-pointer"
                         checked={selected.has(product.id)}
                         onChange={() => toggleSelect(product.id)}
                       />
                       <button
                         onClick={() => handleToggleProductCollapse(product)}
-                        className="mr-2 text-gray-400 hover:text-gray-600"
+                        className="mr-2 text-neutral-dark/40 hover:text-neutral-dark/70"
                       >
                         <ChevronIcon open={!product.collapsed} className="h-4 w-4" />
                       </button>
@@ -509,20 +513,20 @@ export default function BomGantt({ data, onChanged }: BomGanttProps) {
                               if (e.key === "Enter") handleSaveProductName();
                               if (e.key === "Escape") setEditingProduct(null);
                             }}
-                            className="flex-1 rounded border border-gray-300 px-2 py-1 text-sm"
+                            className="flex-1 rounded border border-neutral-dark/15 px-2 py-1 text-sm"
                             autoFocus
                           />
-                          <button onClick={handleSaveProductName} className="text-xs text-indigo-600 hover:text-indigo-800 font-medium">Salva</button>
-                          <button onClick={() => setEditingProduct(null)} className="text-xs text-gray-400 hover:text-gray-600">Annulla</button>
+                          <button onClick={handleSaveProductName} className="text-xs text-primary hover:text-primary/80 font-medium">Salva</button>
+                          <button onClick={() => setEditingProduct(null)} className="text-xs text-neutral-dark/40 hover:text-neutral-dark/70">Annulla</button>
                         </div>
                       ) : (
                         <>
-                          <span className="flex-1 text-sm font-semibold text-gray-800">{product.name}</span>
-                          <span className="w-20 text-center text-xs text-gray-500">
+                          <span className="flex-1 text-sm font-semibold text-foreground">{product.name}</span>
+                          <span className="w-20 text-center text-xs text-neutral-dark/60">
                             {productLT > 0 ? formatDuration(productLT) : "—"}
                           </span>
                           <div className="flex w-20 items-center justify-center gap-1.5">
-                            <span className="text-xs text-gray-500">0%</span>
+                            <span className="text-xs text-neutral-dark/60">0%</span>
                             <ProgressRing progress={0} />
                           </div>
                         </>
@@ -532,21 +536,21 @@ export default function BomGantt({ data, onChanged }: BomGanttProps) {
                       <div className="flex gap-0.5 opacity-0 group-hover:opacity-100 transition-opacity">
                         <button
                           onClick={() => { setAddingChild({ parentId: product.id, productId: product.id }); setChildForm(emptyForm); }}
-                          className="rounded p-1 text-gray-400 hover:bg-gray-200 hover:text-green-600"
+                          className="rounded p-1 text-neutral-dark/40 hover:bg-black/[0.06] hover:text-green-600"
                           title="Aggiungi figlio"
                         >
                           <svg className="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" d="M12 4.5v15m7.5-7.5h-15" /></svg>
                         </button>
                         <button
                           onClick={() => { setEditingProduct(product.id); setEditProductName(product.name); }}
-                          className="rounded p-1 text-gray-400 hover:bg-gray-200 hover:text-indigo-600"
+                          className="rounded p-1 text-neutral-dark/40 hover:bg-black/[0.06] hover:text-primary"
                           title="Rinomina"
                         >
                           <svg className="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" d="m16.862 4.487 1.687-1.688a1.875 1.875 0 1 1 2.652 2.652L6.832 19.82a4.5 4.5 0 0 1-1.897 1.13l-2.685.8.8-2.685a4.5 4.5 0 0 1 1.13-1.897L16.863 4.487Z" /></svg>
                         </button>
                         <button
                           onClick={() => handleDeleteProduct(product.id)}
-                          className="rounded p-1 text-gray-400 hover:bg-red-100 hover:text-red-500"
+                          className="rounded p-1 text-neutral-dark/40 hover:bg-red-100 hover:text-red-500"
                           title="Elimina prodotto"
                         >
                           <svg className="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" /></svg>
@@ -556,7 +560,7 @@ export default function BomGantt({ data, onChanged }: BomGanttProps) {
 
                     {/* Add child form for product root */}
                     {isAddingChildHere && (
-                      <div className="border-b border-gray-100 bg-green-50 px-4 py-3">
+                      <div className="border-b border-black/[0.03] bg-green-50 px-4 py-3">
                         <ItemForm
                           form={childForm} setForm={setChildForm} onSave={handleAddChild}
                           onCancel={() => { setAddingChild(null); setChildForm(emptyForm); }}
@@ -585,13 +589,13 @@ export default function BomGantt({ data, onChanged }: BomGanttProps) {
               return (
                 <div key={`i-${item.id}`}>
                   <div
-                    className={`flex items-center border-b border-gray-50 pr-3 hover:bg-blue-50/30 group ${isEditing ? "bg-blue-50/40" : ""} ${selected.has(item.id) ? "!bg-blue-50/50" : ""}`}
+                    className={`flex items-center border-b border-black/[0.02] pr-3 hover:bg-primary/[0.04] group ${isEditing ? "bg-primary/[0.05]" : ""} ${selected.has(item.id) ? "!bg-primary/[0.06]" : ""}`}
                     style={{ height: `${ROW_HEIGHT}px`, paddingLeft: `${indentPx}px` }}
                     title={tooltip}
                   >
                     <input
                       type="checkbox"
-                      className="mr-1 h-3.5 w-3.5 rounded border-gray-300 accent-blue-600 cursor-pointer shrink-0"
+                      className="mr-1 h-3.5 w-3.5 rounded border-neutral-dark/15 accent-primary cursor-pointer shrink-0"
                       checked={selected.has(item.id)}
                       onChange={() => toggleSelect(item.id)}
                     />
@@ -599,7 +603,7 @@ export default function BomGantt({ data, onChanged }: BomGanttProps) {
                     {hasChildren ? (
                       <button
                         onClick={() => handleToggleItemCollapse(productId, item)}
-                        className="mr-1 text-gray-400 hover:text-gray-600"
+                        className="mr-1 text-neutral-dark/40 hover:text-neutral-dark/70"
                       >
                         <ChevronIcon open={!item.collapsed} />
                       </button>
@@ -609,23 +613,23 @@ export default function BomGantt({ data, onChanged }: BomGanttProps) {
 
                     {/* Dependency circle */}
                     <div
-                      className="mr-2 flex h-4.5 w-4.5 shrink-0 items-center justify-center rounded-full border-2 border-gray-300"
+                      className="mr-2 flex h-4.5 w-4.5 shrink-0 items-center justify-center rounded-full border-2 border-neutral-dark/15"
                       style={{ borderColor: getProductColor(productId) + "88" }}
                     />
 
                     {/* Name */}
-                    <div className="flex-1 min-w-0 truncate text-sm text-gray-700 ml-1">
+                    <div className="flex-1 min-w-0 truncate text-sm text-neutral-dark ml-1">
                       {item.name}
                     </div>
 
                     {/* Duration */}
-                    <span className="w-20 text-center text-xs text-gray-500">
+                    <span className="w-20 text-center text-xs text-neutral-dark/60">
                       {itemLT > 0 ? formatDuration(itemLT) : "—"}
                     </span>
 
                     {/* Progress */}
                     <div className="flex w-20 items-center justify-center gap-1.5">
-                      <span className="text-xs text-gray-500">0%</span>
+                      <span className="text-xs text-neutral-dark/60">0%</span>
                       <ProgressRing progress={0} />
                     </div>
 
@@ -633,21 +637,21 @@ export default function BomGantt({ data, onChanged }: BomGanttProps) {
                     <div className="ml-1 flex gap-0.5 opacity-0 group-hover:opacity-100 transition-opacity shrink-0">
                       <button
                         onClick={() => { setAddingChild({ parentId: item.id, productId }); setChildForm(emptyForm); }}
-                        className="rounded p-1 text-gray-300 hover:text-green-600"
+                        className="rounded p-1 text-neutral-dark/30 hover:text-green-600"
                         title="Aggiungi figlio"
                       >
                         <svg className="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" d="M12 4.5v15m7.5-7.5h-15" /></svg>
                       </button>
                       <button
                         onClick={() => isEditing ? setEditingItem(null) : startEditItem(productId, item)}
-                        className={`rounded p-1 ${isEditing ? "text-indigo-600" : "text-gray-300 hover:text-indigo-600"}`}
+                        className={`rounded p-1 ${isEditing ? "text-primary" : "text-neutral-dark/30 hover:text-primary"}`}
                         title={isEditing ? "Chiudi modifica" : "Modifica"}
                       >
                         <svg className="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" d="m16.862 4.487 1.687-1.688a1.875 1.875 0 1 1 2.652 2.652L6.832 19.82a4.5 4.5 0 0 1-1.897 1.13l-2.685.8.8-2.685a4.5 4.5 0 0 1 1.13-1.897L16.863 4.487Z" /></svg>
                       </button>
                       <button
                         onClick={() => handleDeleteItem(productId, item.id)}
-                        className="rounded p-1 text-gray-300 hover:text-red-600"
+                        className="rounded p-1 text-neutral-dark/30 hover:text-red-600"
                         title="Elimina"
                       >
                         <svg className="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" d="m14.74 9-.346 9m-4.788 0L9.26 9m9.968-3.21c.342.052.682.107 1.022.166m-1.022-.165L18.16 19.673a2.25 2.25 0 0 1-2.244 2.077H8.084a2.25 2.25 0 0 1-2.244-2.077L4.772 5.79m14.456 0a48.108 48.108 0 0 0-3.478-.397m-12 .562c.34-.059.68-.114 1.022-.165m0 0a48.11 48.11 0 0 1 3.478-.397m7.5 0v-.916c0-1.18-.91-2.164-2.09-2.201a51.964 51.964 0 0 0-3.32 0c-1.18.037-2.09 1.022-2.09 2.201v.916m7.5 0a48.667 48.667 0 0 0-7.5 0" /></svg>
@@ -657,7 +661,7 @@ export default function BomGantt({ data, onChanged }: BomGanttProps) {
 
                   {/* Edit form below row */}
                   {isEditing && (
-                    <div className="border-b border-blue-100 bg-blue-50/50 px-3 py-2" style={{ paddingLeft: `${indentPx + 20}px`, height: `${EDIT_ROW_HEIGHT}px` }}>
+                    <div className="border-b border-primary/20 bg-primary/[0.06] px-3 py-2" style={{ paddingLeft: `${indentPx + 20}px`, height: `${EDIT_ROW_HEIGHT}px` }}>
                       <ItemForm
                         form={editForm} setForm={setEditForm} onSave={handleSaveItem}
                         onCancel={() => setEditingItem(null)}
@@ -668,7 +672,7 @@ export default function BomGantt({ data, onChanged }: BomGanttProps) {
 
                   {/* Add child form below row */}
                   {isAddingChildHere && (
-                    <div className="border-b border-gray-100 bg-green-50 py-2 px-2" style={{ paddingLeft: `${indentPx + 24}px`, height: `${EDIT_ROW_HEIGHT}px` }}>
+                    <div className="border-b border-black/[0.03] bg-green-50 py-2 px-2" style={{ paddingLeft: `${indentPx + 24}px`, height: `${EDIT_ROW_HEIGHT}px` }}>
                       <ItemForm
                         form={childForm} setForm={setChildForm} onSave={handleAddChild}
                         onCancel={() => { setAddingChild(null); setChildForm(emptyForm); }}
@@ -682,11 +686,11 @@ export default function BomGantt({ data, onChanged }: BomGanttProps) {
 
             {/* Empty state */}
             {data.products.length === 0 && (
-              <div className="px-4 py-8 text-center text-sm text-gray-400">Nessun prodotto. Crea il primo!</div>
+              <div className="px-4 py-8 text-center text-sm text-neutral-dark/40">Nessun prodotto. Crea il primo!</div>
             )}
 
             {/* Add section button */}
-            <div className="flex items-center gap-2 px-3 py-2 border-t border-gray-100">
+            <div className="flex items-center gap-2 px-3 py-2 border-t border-black/[0.03]">
               {showAddProduct ? (
                 <div className="flex gap-2 items-center flex-1">
                   <input
@@ -697,16 +701,16 @@ export default function BomGantt({ data, onChanged }: BomGanttProps) {
                       if (e.key === "Escape") { setShowAddProduct(false); setAddingProductName(""); }
                     }}
                     placeholder="Nome prodotto"
-                    className="flex-1 rounded border border-gray-300 px-2 py-1 text-sm"
+                    className="flex-1 rounded border border-neutral-dark/15 px-2 py-1 text-sm"
                     autoFocus
                   />
-                  <button onClick={handleAddProduct} className="rounded bg-indigo-600 px-2 py-1 text-xs text-white hover:bg-indigo-700">Salva</button>
-                  <button onClick={() => { setShowAddProduct(false); setAddingProductName(""); }} className="rounded border px-2 py-1 text-xs text-gray-600 hover:bg-gray-100">Annulla</button>
+                  <button onClick={handleAddProduct} className="rounded bg-primary px-2 py-1 text-xs text-white hover:bg-primary/90">Salva</button>
+                  <button onClick={() => { setShowAddProduct(false); setAddingProductName(""); }} className="rounded border px-2 py-1 text-xs text-neutral-dark/70 hover:bg-black/[0.04]">Annulla</button>
                 </div>
               ) : (
                 <button
                   onClick={() => setShowAddProduct(true)}
-                  className="flex items-center gap-1 text-xs text-gray-400 hover:text-indigo-600"
+                  className="flex items-center gap-1 text-xs text-neutral-dark/40 hover:text-primary"
                 >
                   <svg className="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" d="M12 4.5v15m7.5-7.5h-15" /></svg>
                   Prodotto
@@ -718,13 +722,13 @@ export default function BomGantt({ data, onChanged }: BomGanttProps) {
           {/* ===== RIGHT TIMELINE ===== */}
           <div className="flex-1">
             {/* Timeline header */}
-            <div style={{ height: `${ROW_HEIGHT * 2}px` }} className="border-b border-gray-200">
+            <div style={{ height: `${ROW_HEIGHT * 2}px` }} className="border-b border-black/[0.05]">
               {/* Month row */}
               <div className="flex" style={{ height: `${ROW_HEIGHT}px` }}>
                 {months.map((m, i) => (
                   <div
                     key={i}
-                    className="flex items-center border-r border-gray-100 px-2 text-xs font-medium text-gray-600 bg-gray-50"
+                    className="flex items-center border-r border-black/[0.03] px-2 text-xs font-medium text-neutral-dark/70 bg-neutral-light/50"
                     style={{ width: `${m.span * DAY_WIDTH}px` }}
                   >
                     {m.label}
@@ -738,8 +742,8 @@ export default function BomGantt({ data, onChanged }: BomGanttProps) {
                   return (
                     <div
                       key={day}
-                      className={`flex flex-col items-center justify-center border-r border-gray-100 text-[10px] ${
-                        isToday ? "bg-blue-50 font-bold text-blue-600" : "text-gray-400"
+                      className={`flex flex-col items-center justify-center border-r border-black/[0.03] text-[10px] ${
+                        isToday ? "bg-primary/[0.06] font-bold text-primary" : "text-neutral-dark/40"
                       }`}
                       style={{ width: `${DAY_WIDTH}px` }}
                     >
@@ -774,13 +778,13 @@ export default function BomGantt({ data, onChanged }: BomGanttProps) {
                   return (
                     <div key={`tp-${product.id}`}>
                       <div
-                        className="relative border-b border-gray-100"
+                        className="relative border-b border-black/[0.03]"
                         style={{ height: `${SECTION_ROW_HEIGHT}px` }}
                       >
                         {/* Day grid */}
                         <div className="absolute inset-0 flex pointer-events-none">
                           {days.map((day) => (
-                            <div key={day} className="border-r border-gray-50" style={{ width: `${DAY_WIDTH}px` }} />
+                            <div key={day} className="border-r border-black/[0.02]" style={{ width: `${DAY_WIDTH}px` }} />
                           ))}
                         </div>
 
@@ -799,7 +803,7 @@ export default function BomGantt({ data, onChanged }: BomGanttProps) {
 
                       {/* Spacer for product add-child form */}
                       {isProductAddingChild && (
-                        <div className="border-b border-gray-100 bg-green-50/20" style={{ height: `${EDIT_ROW_HEIGHT}px` }} />
+                        <div className="border-b border-black/[0.03] bg-green-50/20" style={{ height: `${EDIT_ROW_HEIGHT}px` }} />
                       )}
                     </div>
                   );
@@ -825,13 +829,13 @@ export default function BomGantt({ data, onChanged }: BomGanttProps) {
                 return (
                   <div key={`ti-${item.id}`}>
                     <div
-                      className={`relative border-b border-gray-50 ${isItemEditing ? "bg-blue-50/20" : ""}`}
+                      className={`relative border-b border-black/[0.02] ${isItemEditing ? "bg-primary/[0.03]" : ""}`}
                       style={{ height: `${ROW_HEIGHT}px` }}
                     >
                       {/* Day grid */}
                       <div className="absolute inset-0 flex pointer-events-none">
                         {days.map((day) => (
-                          <div key={day} className="border-r border-gray-50" style={{ width: `${DAY_WIDTH}px` }} />
+                          <div key={day} className="border-r border-black/[0.02]" style={{ width: `${DAY_WIDTH}px` }} />
                         ))}
                       </div>
 
@@ -863,7 +867,7 @@ export default function BomGantt({ data, onChanged }: BomGanttProps) {
 
                           {/* Right resize handle */}
                           <div
-                            className="absolute right-0 top-0 bottom-0 w-2 cursor-ew-resize z-20 hover:bg-black/10 rounded-r-md"
+                            className="absolute right-0 top-0 bottom-0 w-2 cursor-ew-resize z-20 hover:bg-black/[0.06] rounded-r-md"
                             onMouseDown={(e) => {
                               e.stopPropagation();
                               handleDragStart(e, productId, item.id);
@@ -874,7 +878,7 @@ export default function BomGantt({ data, onChanged }: BomGanttProps) {
                       ) : (
                         /* No workflow placeholder */
                         <div
-                          className="absolute top-1.5 flex items-center rounded-md border border-dashed border-gray-300 px-3 cursor-pointer hover:border-blue-400 hover:bg-blue-50/30"
+                          className="absolute top-1.5 flex items-center rounded-md border border-dashed border-neutral-dark/15 px-3 cursor-pointer hover:border-primary/40 hover:bg-primary/[0.04]"
                           style={{
                             left: `${barLeft}px`,
                             height: `${ROW_HEIGHT - 12}px`,
@@ -882,19 +886,19 @@ export default function BomGantt({ data, onChanged }: BomGanttProps) {
                           }}
                           onClick={() => setWorkflowItem({ itemId: item.id, productId })}
                         >
-                          <span className="text-[10px] text-gray-400 italic whitespace-nowrap">+ Workflow</span>
+                          <span className="text-[10px] text-neutral-dark/40 italic whitespace-nowrap">+ Workflow</span>
                         </div>
                       )}
                     </div>
 
                     {/* Spacer for edit form */}
                     {isItemEditing && (
-                      <div className="border-b border-blue-100 bg-blue-50/20" style={{ height: `${EDIT_ROW_HEIGHT}px` }} />
+                      <div className="border-b border-primary/20 bg-primary/[0.03]" style={{ height: `${EDIT_ROW_HEIGHT}px` }} />
                     )}
 
                     {/* Spacer for add-child form */}
                     {isItemAddingChild && (
-                      <div className="border-b border-gray-100 bg-green-50/20" style={{ height: `${EDIT_ROW_HEIGHT}px` }} />
+                      <div className="border-b border-black/[0.03] bg-green-50/20" style={{ height: `${EDIT_ROW_HEIGHT}px` }} />
                     )}
                   </div>
                 );
@@ -902,7 +906,7 @@ export default function BomGantt({ data, onChanged }: BomGanttProps) {
 
               {/* Extra row to match add-product area in left panel */}
               {showAddProduct && (
-                <div className="border-b border-gray-50" style={{ height: `${ROW_HEIGHT}px` }} />
+                <div className="border-b border-black/[0.02]" style={{ height: `${ROW_HEIGHT}px` }} />
               )}
             </div>
           </div>
@@ -923,7 +927,7 @@ export default function BomGantt({ data, onChanged }: BomGanttProps) {
               className="w-[80vw] max-w-[800px] max-h-[80vh] overflow-y-auto rounded-xl bg-white p-6 shadow-xl"
               onClick={(e) => e.stopPropagation()}
             >
-              <h3 className="mb-3 text-sm font-semibold text-gray-900">
+              <h3 className="mb-3 text-sm font-semibold text-foreground">
                 Workflow: {item.name}
               </h3>
               <RestockWorkflowEditor

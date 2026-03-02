@@ -46,7 +46,7 @@ export default function DDMRPConfigPanel() {
   if (!config) return null;
 
   return (
-    <div className="rounded-xl border border-black/5 bg-black/[0.01] p-4">
+    <div className="rounded-xl border border-black/[0.04] bg-neutral-light/40 p-4">
       <div className="grid grid-cols-5 gap-3">
         <div>
           <label className="block text-[10px] font-semibold text-neutral-dark/50 uppercase tracking-wider mb-1">
@@ -57,7 +57,7 @@ export default function DDMRPConfigPanel() {
               type="number"
               value={form.aduDefaultWindowDays ?? ""}
               onChange={(e) => setForm({ ...form, aduDefaultWindowDays: parseInt(e.target.value) || 28 })}
-              className="w-full px-2 py-1 text-xs rounded-md border border-black/10 focus:outline-none focus:ring-1 focus:ring-primary/30"
+              className="w-full px-2 py-1 text-xs rounded-md border border-black/[0.06] focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary/40"
             />
             <span className="text-[10px] text-neutral-dark/40">days</span>
           </div>
@@ -70,7 +70,7 @@ export default function DDMRPConfigPanel() {
           <select
             value={form.serviceLevelZ ?? 1.65}
             onChange={(e) => setForm({ ...form, serviceLevelZ: parseFloat(e.target.value) })}
-            className="w-full px-2 py-1 text-xs rounded-md border border-black/10 focus:outline-none focus:ring-1 focus:ring-primary/30 bg-white"
+            className="w-full px-2 py-1 text-xs rounded-md border border-black/[0.06] focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary/40 bg-white"
           >
             {Z_OPTIONS.map((opt) => (
               <option key={opt.value} value={opt.value}>{opt.label}</option>
@@ -87,7 +87,7 @@ export default function DDMRPConfigPanel() {
               type="number"
               value={form.orderCycleDays ?? ""}
               onChange={(e) => setForm({ ...form, orderCycleDays: parseInt(e.target.value) || 7 })}
-              className="w-full px-2 py-1 text-xs rounded-md border border-black/10 focus:outline-none focus:ring-1 focus:ring-primary/30"
+              className="w-full px-2 py-1 text-xs rounded-md border border-black/[0.06] focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary/40"
             />
             <span className="text-[10px] text-neutral-dark/40">days</span>
           </div>
@@ -102,7 +102,7 @@ export default function DDMRPConfigPanel() {
               type="number"
               value={form.greenDays ?? ""}
               onChange={(e) => setForm({ ...form, greenDays: parseInt(e.target.value) || 7 })}
-              className="w-full px-2 py-1 text-xs rounded-md border border-black/10 focus:outline-none focus:ring-1 focus:ring-primary/30"
+              className="w-full px-2 py-1 text-xs rounded-md border border-black/[0.06] focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary/40"
             />
             <span className="text-[10px] text-neutral-dark/40">days</span>
           </div>
@@ -112,7 +112,7 @@ export default function DDMRPConfigPanel() {
           <button
             onClick={handleSave}
             disabled={saving}
-            className="w-full px-3 py-1 text-xs font-medium text-white bg-foreground rounded-md hover:bg-foreground/90 disabled:opacity-40"
+            className="w-full px-3 py-1 text-xs font-medium text-white bg-primary rounded-full press-scale hover:bg-primary/90 disabled:opacity-40"
           >
             {saving ? "Saving..." : "Save"}
           </button>

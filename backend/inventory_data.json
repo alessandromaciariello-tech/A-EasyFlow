@@ -1,449 +1,14 @@
 {
   "products": [
     {
-      "id": "de185a04",
-      "name": "Pear-Phone",
+      "id": "dc5452dd",
+      "name": "Pear Phone",
       "collapsed": false,
-      "children": [
-        {
-          "id": "f819af36",
-          "name": "DISPLAY",
-          "quantity": 1,
-          "supplier": "",
-          "unit_cost": 0.0,
-          "quantity_in_stock": 99,
-          "collapsed": false,
-          "restock_workflow": null,
-          "children": [
-            {
-              "id": "97679a1b",
-              "name": "Glass (Gorilla-type)",
-              "quantity": 1,
-              "supplier": "Corning",
-              "unit_cost": 8.0,
-              "quantity_in_stock": 99,
-              "collapsed": false,
-              "restock_workflow": {
-                "phases": [
-                  {
-                    "id": "tmp_1772425020304_5",
-                    "name": "a",
-                    "color": "#3B82F6",
-                    "tasks": [
-                      {
-                        "id": "tmp_1772425020304_6",
-                        "name": "1",
-                        "duration_days": 2,
-                        "duration_type": "fixed"
-                      }
-                    ]
-                  },
-                  {
-                    "id": "tmp_1772425028938_11",
-                    "name": "b",
-                    "color": "#10B981",
-                    "tasks": [
-                      {
-                        "id": "tmp_1772425028938_12",
-                        "name": "2",
-                        "duration_days": 3,
-                        "duration_type": "fixed"
-                      }
-                    ]
-                  }
-                ]
-              },
-              "children": [
-                {
-                  "id": "5be76c3e",
-                  "name": "jhvjh",
-                  "quantity": 1,
-                  "supplier": "",
-                  "unit_cost": 0.0,
-                  "quantity_in_stock": 0,
-                  "collapsed": false,
-                  "restock_workflow": null,
-                  "children": []
-                }
-              ]
-            },
-            {
-              "id": "1b12c0ac",
-              "name": "Protective layer",
-              "quantity": 1,
-              "supplier": "Corning",
-              "unit_cost": 2.0,
-              "quantity_in_stock": 99,
-              "collapsed": false,
-              "restock_workflow": null,
-              "children": []
-            },
-            {
-              "id": "dd3b236c",
-              "name": "Touch-sensitive layer (digitizer)",
-              "quantity": 1,
-              "supplier": "Samsung Display",
-              "unit_cost": 6.0,
-              "quantity_in_stock": 99,
-              "collapsed": false,
-              "restock_workflow": null,
-              "children": []
-            },
-            {
-              "id": "e2cd1ded",
-              "name": "Display controller",
-              "quantity": 1,
-              "supplier": "Synaptics",
-              "unit_cost": 4.0,
-              "quantity_in_stock": 99,
-              "collapsed": false,
-              "restock_workflow": null,
-              "children": []
-            },
-            {
-              "id": "b7579b51",
-              "name": "OLED panel",
-              "quantity": 1,
-              "supplier": "Samsung Display",
-              "unit_cost": 55.0,
-              "quantity_in_stock": 99,
-              "collapsed": false,
-              "restock_workflow": null,
-              "children": []
-            }
-          ]
-        },
-        {
-          "id": "7cfbe13a",
-          "name": "MOTHERBOARD",
-          "quantity": 1,
-          "supplier": "",
-          "unit_cost": 0.0,
-          "quantity_in_stock": 99,
-          "collapsed": false,
-          "restock_workflow": null,
-          "children": [
-            {
-              "id": "7c43fc67",
-              "name": "Processor (SoC - CPU + GPU)",
-              "quantity": 1,
-              "supplier": "Qualcomm",
-              "unit_cost": 0.0,
-              "quantity_in_stock": 99,
-              "collapsed": false,
-              "restock_workflow": null,
-              "children": [
-                {
-                  "id": "a2d34a3b",
-                  "name": "CPU cores",
-                  "quantity": 1,
-                  "supplier": "Qualcomm",
-                  "unit_cost": 30.0,
-                  "quantity_in_stock": 99,
-                  "collapsed": false,
-                  "restock_workflow": null,
-                  "children": []
-                },
-                {
-                  "id": "82b5af74",
-                  "name": "GPU cores",
-                  "quantity": 1,
-                  "supplier": "Qualcomm",
-                  "unit_cost": 30.0,
-                  "quantity_in_stock": 99,
-                  "collapsed": false,
-                  "restock_workflow": null,
-                  "children": []
-                }
-              ]
-            },
-            {
-              "id": "4bbd6062",
-              "name": "Memory (RAM 8-12GB)",
-              "quantity": 1,
-              "supplier": "SK Hynix",
-              "unit_cost": 18.0,
-              "quantity_in_stock": 99,
-              "collapsed": false,
-              "restock_workflow": null,
-              "children": []
-            },
-            {
-              "id": "114c6be8",
-              "name": "Storage (Flash 256GB)",
-              "quantity": 1,
-              "supplier": "Samsung Semiconductor",
-              "unit_cost": 20.0,
-              "quantity_in_stock": 99,
-              "collapsed": false,
-              "restock_workflow": null,
-              "children": []
-            },
-            {
-              "id": "6c0ae86e",
-              "name": "Modem / RF Front-End",
-              "quantity": 1,
-              "supplier": "Qualcomm",
-              "unit_cost": 7.0,
-              "quantity_in_stock": 99,
-              "collapsed": false,
-              "restock_workflow": null,
-              "children": []
-            },
-            {
-              "id": "b4b1cd45",
-              "name": "Wi-Fi / Bluetooth Chip",
-              "quantity": 1,
-              "supplier": "Broadcom",
-              "unit_cost": 5.0,
-              "quantity_in_stock": 99,
-              "collapsed": false,
-              "restock_workflow": null,
-              "children": []
-            }
-          ]
-        },
-        {
-          "id": "6219c196",
-          "name": "BATTERY",
-          "quantity": 1,
-          "supplier": "",
-          "unit_cost": 0.0,
-          "quantity_in_stock": 99,
-          "collapsed": false,
-          "restock_workflow": null,
-          "children": [
-            {
-              "id": "a85a0521",
-              "name": "Lithium-ion cells",
-              "quantity": 1,
-              "supplier": "ATL",
-              "unit_cost": 9.0,
-              "quantity_in_stock": 99,
-              "collapsed": false,
-              "restock_workflow": null,
-              "children": []
-            },
-            {
-              "id": "ba33f270",
-              "name": "Protection circuit",
-              "quantity": 1,
-              "supplier": "Texas Instruments",
-              "unit_cost": 2.0,
-              "quantity_in_stock": 99,
-              "collapsed": false,
-              "restock_workflow": null,
-              "children": []
-            },
-            {
-              "id": "09928895",
-              "name": "Charging connector integration",
-              "quantity": 1,
-              "supplier": "Foxconn",
-              "unit_cost": 1.0,
-              "quantity_in_stock": 99,
-              "collapsed": false,
-              "restock_workflow": null,
-              "children": []
-            }
-          ]
-        },
-        {
-          "id": "0f5ad50a",
-          "name": "CAMERA MODULE",
-          "quantity": 1,
-          "supplier": "",
-          "unit_cost": 0.0,
-          "quantity_in_stock": 99,
-          "collapsed": false,
-          "restock_workflow": null,
-          "children": [
-            {
-              "id": "07ad4bd8",
-              "name": "Lens glass",
-              "quantity": 1,
-              "supplier": "Largan Precision",
-              "unit_cost": 3.0,
-              "quantity_in_stock": 99,
-              "collapsed": false,
-              "restock_workflow": null,
-              "children": []
-            },
-            {
-              "id": "006a1273",
-              "name": "Mount structure",
-              "quantity": 1,
-              "supplier": "Foxconn",
-              "unit_cost": 3.0,
-              "quantity_in_stock": 99,
-              "collapsed": false,
-              "restock_workflow": null,
-              "children": []
-            },
-            {
-              "id": "0126ebf2",
-              "name": "Image sensor",
-              "quantity": 1,
-              "supplier": "Sony Semiconductor",
-              "unit_cost": 25.0,
-              "quantity_in_stock": 99,
-              "collapsed": false,
-              "restock_workflow": null,
-              "children": []
-            },
-            {
-              "id": "485eb4ff",
-              "name": "Optical Stabilizer (OIS)",
-              "quantity": 1,
-              "supplier": "LG Innotek",
-              "unit_cost": 7.0,
-              "quantity_in_stock": 99,
-              "collapsed": false,
-              "restock_workflow": null,
-              "children": []
-            }
-          ]
-        },
-        {
-          "id": "66e2ed30",
-          "name": "Casing",
-          "quantity": 1,
-          "supplier": "",
-          "unit_cost": 0.0,
-          "quantity_in_stock": 99,
-          "collapsed": false,
-          "restock_workflow": null,
-          "children": [
-            {
-              "id": "90e2a72b",
-              "name": "Aluminum frame",
-              "quantity": 1,
-              "supplier": "Catcher Technology",
-              "unit_cost": 10.0,
-              "quantity_in_stock": 99,
-              "collapsed": false,
-              "restock_workflow": null,
-              "children": []
-            },
-            {
-              "id": "bbee46a0",
-              "name": "Physical buttons",
-              "quantity": 1,
-              "supplier": "Foxconn",
-              "unit_cost": 3.0,
-              "quantity_in_stock": 99,
-              "collapsed": false,
-              "restock_workflow": null,
-              "children": []
-            },
-            {
-              "id": "c371b75d",
-              "name": "Sealing gaskets",
-              "quantity": 1,
-              "supplier": "Trelleborg",
-              "unit_cost": 5.0,
-              "quantity_in_stock": 99,
-              "collapsed": false,
-              "restock_workflow": null,
-              "children": []
-            }
-          ]
-        },
-        {
-          "id": "ef8e83ff",
-          "name": "Audio",
-          "quantity": 1,
-          "supplier": "",
-          "unit_cost": 0.0,
-          "quantity_in_stock": 99,
-          "collapsed": false,
-          "restock_workflow": null,
-          "children": [
-            {
-              "id": "f06b87aa",
-              "name": "Speaker driver",
-              "quantity": 1,
-              "supplier": "AAC Technologies",
-              "unit_cost": 3.0,
-              "quantity_in_stock": 99,
-              "collapsed": false,
-              "restock_workflow": null,
-              "children": []
-            },
-            {
-              "id": "ef7dbd42",
-              "name": "Speaker grille",
-              "quantity": 1,
-              "supplier": "Foxconn",
-              "unit_cost": 1.0,
-              "quantity_in_stock": 99,
-              "collapsed": false,
-              "restock_workflow": null,
-              "children": []
-            },
-            {
-              "id": "62d7ff78",
-              "name": "Microphone capsules",
-              "quantity": 1,
-              "supplier": "Knowles",
-              "unit_cost": 2.0,
-              "quantity_in_stock": 99,
-              "collapsed": false,
-              "restock_workflow": null,
-              "children": []
-            },
-            {
-              "id": "15314e7a",
-              "name": "Noise reduction circuit",
-              "quantity": 1,
-              "supplier": "Cirrus Logic",
-              "unit_cost": 1.0,
-              "quantity_in_stock": 99,
-              "collapsed": false,
-              "restock_workflow": null,
-              "children": []
-            }
-          ]
-        },
-        {
-          "id": "f60ad988",
-          "name": "Connectors",
-          "quantity": 1,
-          "supplier": "",
-          "unit_cost": 0.0,
-          "quantity_in_stock": 99,
-          "collapsed": false,
-          "restock_workflow": null,
-          "children": [
-            {
-              "id": "e8e8f174",
-              "name": "USB-C port",
-              "quantity": 1,
-              "supplier": "Foxconn",
-              "unit_cost": 3.0,
-              "quantity_in_stock": 99,
-              "collapsed": false,
-              "restock_workflow": null,
-              "children": []
-            },
-            {
-              "id": "bdca5779",
-              "name": "SIM slot",
-              "quantity": 1,
-              "supplier": "Foxconn",
-              "unit_cost": 2.0,
-              "quantity_in_stock": 99,
-              "collapsed": false,
-              "restock_workflow": null,
-              "children": []
-            }
-          ]
-        }
-      ],
-      "desired_stock": 200
+      "desired_stock": null,
+      "children": []
     },
     {
-      "id": "0d68c25e",
+      "id": "a9b83d83",
       "name": "Phone Case",
       "collapsed": false,
       "desired_stock": null,
@@ -454,92 +19,182 @@
     {
       "name": "AAC Technologies",
       "phone": "",
-      "email": "easyflow.hfarm@gmail.com"
+      "email": "easyflow.hfarm@gmail.com",
+      "contact_person": "",
+      "channel_type": "email",
+      "notes": "",
+      "default_lead_time": null,
+      "default_moq": null
     },
     {
       "name": "ATL",
       "phone": "",
-      "email": "easyflow.hfarm@gmail.com"
+      "email": "easyflow.hfarm@gmail.com",
+      "contact_person": "",
+      "channel_type": "email",
+      "notes": "",
+      "default_lead_time": null,
+      "default_moq": null
     },
     {
       "name": "Broadcom",
       "phone": "",
-      "email": "easyflow.hfarm@gmail.com"
+      "email": "easyflow.hfarm@gmail.com",
+      "contact_person": "",
+      "channel_type": "email",
+      "notes": "",
+      "default_lead_time": null,
+      "default_moq": null
     },
     {
       "name": "Catcher Technology",
       "phone": "",
-      "email": "easyflow.hfarm@gmail.com"
+      "email": "easyflow.hfarm@gmail.com",
+      "contact_person": "",
+      "channel_type": "email",
+      "notes": "",
+      "default_lead_time": null,
+      "default_moq": null
     },
     {
       "name": "Cirrus Logic",
       "phone": "",
-      "email": "easyflow.hfarm@gmail.com"
+      "email": "easyflow.hfarm@gmail.com",
+      "contact_person": "",
+      "channel_type": "email",
+      "notes": "",
+      "default_lead_time": null,
+      "default_moq": null
     },
     {
       "name": "Corning",
       "phone": "",
-      "email": "easyflow.hfarm@gmail.com"
+      "email": "easyflow.hfarm@gmail.com",
+      "contact_person": "",
+      "channel_type": "email",
+      "notes": "",
+      "default_lead_time": null,
+      "default_moq": null
     },
     {
       "name": "Foxconn",
       "phone": "",
-      "email": "easyflow.hfarm@gmail.com"
+      "email": "easyflow.hfarm@gmail.com",
+      "contact_person": "",
+      "channel_type": "email",
+      "notes": "",
+      "default_lead_time": null,
+      "default_moq": null
     },
     {
       "name": "Knowles",
       "phone": "",
-      "email": "easyflow.hfarm@gmail.com"
+      "email": "easyflow.hfarm@gmail.com",
+      "contact_person": "",
+      "channel_type": "email",
+      "notes": "",
+      "default_lead_time": null,
+      "default_moq": null
     },
     {
       "name": "LG Innotek",
       "phone": "",
-      "email": "easyflow.hfarm@gmail.com"
+      "email": "easyflow.hfarm@gmail.com",
+      "contact_person": "",
+      "channel_type": "email",
+      "notes": "",
+      "default_lead_time": null,
+      "default_moq": null
     },
     {
       "name": "Largan Precision",
       "phone": "",
-      "email": "easyflow.hfarm@gmail.com"
+      "email": "easyflow.hfarm@gmail.com",
+      "contact_person": "",
+      "channel_type": "email",
+      "notes": "",
+      "default_lead_time": null,
+      "default_moq": null
     },
     {
       "name": "Qualcomm",
       "phone": "",
-      "email": "easyflow.hfarm@gmail.com"
+      "email": "easyflow.hfarm@gmail.com",
+      "contact_person": "",
+      "channel_type": "email",
+      "notes": "",
+      "default_lead_time": null,
+      "default_moq": null
     },
     {
       "name": "SK Hynix",
       "phone": "",
-      "email": "easyflow.hfarm@gmail.com"
+      "email": "easyflow.hfarm@gmail.com",
+      "contact_person": "",
+      "channel_type": "email",
+      "notes": "",
+      "default_lead_time": null,
+      "default_moq": null
     },
     {
       "name": "Samsung Display",
       "phone": "",
-      "email": "easyflow.hfarm@gmail.com"
+      "email": "easyflow.hfarm@gmail.com",
+      "contact_person": "",
+      "channel_type": "email",
+      "notes": "",
+      "default_lead_time": null,
+      "default_moq": null
     },
     {
       "name": "Samsung Semiconductor",
       "phone": "",
-      "email": "easyflow.hfarm@gmail.com"
+      "email": "easyflow.hfarm@gmail.com",
+      "contact_person": "",
+      "channel_type": "email",
+      "notes": "",
+      "default_lead_time": null,
+      "default_moq": null
     },
     {
       "name": "Sony Semiconductor",
       "phone": "",
-      "email": "easyflow.hfarm@gmail.com"
+      "email": "easyflow.hfarm@gmail.com",
+      "contact_person": "",
+      "channel_type": "email",
+      "notes": "",
+      "default_lead_time": null,
+      "default_moq": null
     },
     {
       "name": "Synaptics",
       "phone": "",
-      "email": "easyflow.hfarm@gmail.com"
+      "email": "easyflow.hfarm@gmail.com",
+      "contact_person": "",
+      "channel_type": "email",
+      "notes": "",
+      "default_lead_time": null,
+      "default_moq": null
     },
     {
       "name": "Texas Instruments",
       "phone": "",
-      "email": "easyflow.hfarm@gmail.com"
+      "email": "easyflow.hfarm@gmail.com",
+      "contact_person": "",
+      "channel_type": "email",
+      "notes": "",
+      "default_lead_time": null,
+      "default_moq": null
     },
     {
       "name": "Trelleborg",
       "phone": "",
-      "email": "easyflow.hfarm@gmail.com"
+      "email": "easyflow.hfarm@gmail.com",
+      "contact_person": "",
+      "channel_type": "email",
+      "notes": "",
+      "default_lead_time": null,
+      "default_moq": null
     }
   ],
   "restock_templates": [

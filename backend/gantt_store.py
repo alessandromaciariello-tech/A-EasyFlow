@@ -126,7 +126,7 @@ def delete_section(section_id: str) -> bool:
 
 # --- Task CRUD ---
 
-def add_task(section_id: str, title: str, duration: int, start_date: str, color: str = "#3B82F6") -> Optional[Dict]:
+def add_task(section_id: str, title: str, duration: int, start_date: str, color: str = "#3B82F6", daily_hours: float = 0) -> Optional[Dict]:
     project = load_project()
     for section in project["sections"]:
         if section["id"] == section_id:
@@ -140,6 +140,7 @@ def add_task(section_id: str, title: str, duration: int, start_date: str, color:
                 "children": [],
                 "collapsed": False,
                 "dependencies": [],
+                "daily_hours": daily_hours,
             }
             section["tasks"].append(task)
             save_project(project)
@@ -147,7 +148,7 @@ def add_task(section_id: str, title: str, duration: int, start_date: str, color:
     return None
 
 
-def add_subtask(section_id: str, parent_task_id: str, title: str, duration: int, start_date: str, color: str = "#3B82F6") -> Optional[Dict]:
+def add_subtask(section_id: str, parent_task_id: str, title: str, duration: int, start_date: str, color: str = "#3B82F6", daily_hours: float = 0) -> Optional[Dict]:
     """Add a child task to any task at any depth within a section."""
     project = load_project()
     for section in project["sections"]:
@@ -165,6 +166,7 @@ def add_subtask(section_id: str, parent_task_id: str, title: str, duration: int,
                 "children": [],
                 "collapsed": False,
                 "dependencies": [],
+                "daily_hours": daily_hours,
             }
             parent["children"].append(subtask)
             save_project(project)
