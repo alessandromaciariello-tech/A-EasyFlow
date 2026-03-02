@@ -633,6 +633,17 @@ export default function GanttChart() {
   // Linking mode (for creating dependencies)
   const [linkingFrom, setLinkingFrom] = useState<{ sectionId: string; taskId: string } | null>(null);
 
+  // Multi-select
+  const [selected, setSelected] = useState<Set<string>>(new Set());
+
+  const toggleSelect = (id: string) =>
+    setSelected((prev) => {
+      const next = new Set(prev);
+      if (next.has(id)) next.delete(id);
+      else next.add(id);
+      return next;
+    });
+
   // Drag state for task bars
   const [drag, setDrag] = useState<{
     sectionId: string;
@@ -727,6 +738,32 @@ export default function GanttChart() {
   const handleDeleteTask = async (sectionId: string, taskId: string) => {
     await deleteGanttTask(sectionId, taskId);
     setContextMenu(null);
+    fetchProject();
+  };
+
+  const handleBatchDelete = async () => {
+    if (!project || selected.size === 0) return;
+    const sectionIds = new Set(project.sections.map((s) => s.id));
+    for (const id of selected) {
+      if (sectionIds.has(id)) {
+        await deleteGanttSection(id);
+      } else {
+        for (const sec of project.sections) {
+          const findTask = (tasks: GanttTask[]): boolean => {
+            for (const t of tasks) {
+              if (t.id === id) return true;
+              if (t.children && findTask(t.children)) return true;
+            }
+            return false;
+          };
+          if (findTask(sec.tasks)) {
+            await deleteGanttTask(sec.id, id);
+            break;
+          }
+        }
+      }
+    }
+    setSelected(new Set());
     fetchProject();
   };
 
@@ -1002,10 +1039,39 @@ export default function GanttChart() {
               className="flex items-center border-b border-gray-200 bg-gray-50 px-3 text-xs font-medium uppercase text-gray-500"
               style={{ height: `${ROW_HEIGHT * 2}px` }}
             >
+              <input
+                type="checkbox"
+                className="mr-2 h-3.5 w-3.5 rounded border-gray-300 accent-blue-600 cursor-pointer"
+                checked={rows.length > 0 && selected.size === rows.length}
+                onChange={() => {
+                  if (selected.size === rows.length) setSelected(new Set());
+                  else setSelected(new Set(rows.map((r) => r.kind === "section" ? r.section.id : r.task.id)));
+                }}
+              />
               <div className="flex-1">Titolo</div>
               <div className="w-20 text-center">Durata</div>
               <div className="w-20 text-center">Stato</div>
             </div>
+
+            {/* Selection action bar */}
+            {selected.size > 0 && (
+              <div className="flex items-center gap-3 border-b border-gray-200 bg-white px-3 py-1.5">
+                <span className="text-xs font-semibold text-blue-600">{selected.size} selezionat{selected.size === 1 ? "o" : "i"}</span>
+                <button
+                  onClick={handleBatchDelete}
+                  className="flex items-center gap-1 rounded px-2 py-1 text-xs text-red-600 hover:bg-red-50 font-medium"
+                >
+                  <svg className="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" d="m14.74 9-.346 9m-4.788 0L9.26 9m9.968-3.21c.342.052.682.107 1.022.166m-1.022-.165L18.16 19.673a2.25 2.25 0 0 1-2.244 2.077H8.084a2.25 2.25 0 0 1-2.244-2.077L4.772 5.79m14.456 0a48.108 48.108 0 0 0-3.478-.397m-12 .562c.34-.059.68-.114 1.022-.165m0 0a48.11 48.11 0 0 1 3.478-.397m7.5 0v-.916c0-1.18-.91-2.164-2.09-2.201a51.964 51.964 0 0 0-3.32 0c-1.18.037-2.09 1.022-2.09 2.201v.916m7.5 0a48.667 48.667 0 0 0-7.5 0" /></svg>
+                  Elimina
+                </button>
+                <button
+                  onClick={() => setSelected(new Set())}
+                  className="ml-auto rounded p-1 text-gray-400 hover:text-gray-600"
+                >
+                  <svg className="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" /></svg>
+                </button>
+              </div>
+            )}
 
             {/* Rows */}
             {rows.map((row) => {
@@ -1014,9 +1080,15 @@ export default function GanttChart() {
                 return (
                   <div
                     key={`s-${section.id}`}
-                    className="flex items-center border-b border-gray-100 bg-gray-50/70 px-3 group"
+                    className={`flex items-center border-b border-gray-100 bg-gray-50/70 px-3 group ${selected.has(section.id) ? "!bg-blue-50/50" : ""}`}
                     style={{ height: `${SECTION_ROW_HEIGHT}px` }}
                   >
+                    <input
+                      type="checkbox"
+                      className="mr-2 h-3.5 w-3.5 rounded border-gray-300 accent-blue-600 cursor-pointer"
+                      checked={selected.has(section.id)}
+                      onChange={() => toggleSelect(section.id)}
+                    />
                     <button
                       onClick={() => handleToggleSection(section.id, !section.collapsed)}
                       className="mr-2 text-gray-400 hover:text-gray-600"
@@ -1068,13 +1140,19 @@ export default function GanttChart() {
               return (
                 <div
                   key={`t-${task.id}`}
-                  className="flex items-center border-b border-gray-50 pr-3 hover:bg-blue-50/30 group cursor-context-menu"
+                  className={`flex items-center border-b border-gray-50 pr-3 hover:bg-blue-50/30 group cursor-context-menu ${selected.has(task.id) ? "!bg-blue-50/50" : ""}`}
                   style={{ height: `${ROW_HEIGHT}px`, paddingLeft: `${indentPx}px` }}
                   onContextMenu={(e) => {
                     e.preventDefault();
                     setContextMenu({ x: e.clientX, y: e.clientY, sectionId: section.id, taskId: task.id });
                   }}
                 >
+                  <input
+                    type="checkbox"
+                    className="mr-1 h-3.5 w-3.5 rounded border-gray-300 accent-blue-600 cursor-pointer shrink-0"
+                    checked={selected.has(task.id)}
+                    onChange={() => toggleSelect(task.id)}
+                  />
                   {/* Collapse toggle for tasks with children */}
                   {hasChildren ? (
                     <button
