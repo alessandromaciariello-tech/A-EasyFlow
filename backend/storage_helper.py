@@ -7,7 +7,7 @@ Otherwise → falls back to local JSON files (dev mode).
 import os
 import json
 
-DATABASE_URL = os.getenv("DATABASE_URL")
+DATABASE_URL = (os.getenv("DATABASE_URL") or "").strip() or None
 
 # --- PostgreSQL backend ---
 
