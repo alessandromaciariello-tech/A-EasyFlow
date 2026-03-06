@@ -89,6 +89,7 @@ _FILE_MAP = {
     "settings": "settings.json",
     "templates": "gantt_custom_templates.json",
     "hidden": "gantt_hidden_templates.json",
+    "google_token": os.path.join("..", "token.json"),
 }
 
 

@@ -1,6 +1,7 @@
 """
 Integrazione Google Calendar API (OAuth2)
 Gestisce autenticazione, lettura e scrittura eventi.
+Token OAuth salvato in Supabase per persistenza su Vercel.
 """
 import os
 import json
@@ -12,29 +13,27 @@ from google_auth_oauthlib.flow import Flow
 from google.auth.transport.requests import Request
 from googleapiclient.discovery import build
 from googleapiclient.errors import HttpError
+from storage_helper import load_json, save_json
 
 SCOPES = ["https://www.googleapis.com/auth/calendar"]
-CREDENTIALS_FILE = os.path.join(os.path.dirname(__file__), "..", "credentials.json")
-TOKEN_FILE = os.path.join(os.path.dirname(__file__), "..", "token.json")
+_LOCAL_CREDS = os.path.join(os.path.dirname(__file__), "..", "credentials.json")
+# On Vercel, filesystem is read-only — use /tmp for credentials file
+CREDENTIALS_FILE = _LOCAL_CREDS if os.path.exists(_LOCAL_CREDS) else "/tmp/credentials.json"
 REDIRECT_URI = os.getenv("GOOGLE_REDIRECT_URI", "http://localhost:8000/api/auth/callback")
 
-# Fallback: se il file non esiste, crealo da env var (per deploy su Render/Railway)
+
 def _ensure_credentials_file():
+    """Create credentials.json from env var if file doesn't exist (cloud deploy)."""
     if not os.path.exists(CREDENTIALS_FILE):
         creds_json = os.getenv("GOOGLE_CREDENTIALS_JSON")
         if creds_json:
             with open(CREDENTIALS_FILE, "w") as f:
                 f.write(creds_json)
 
-def _ensure_token_file():
-    if not os.path.exists(TOKEN_FILE):
-        token_json = os.getenv("GOOGLE_TOKEN_JSON")
-        if token_json:
-            with open(TOKEN_FILE, "w") as f:
-                f.write(token_json)
-
-_ensure_credentials_file()
-_ensure_token_file()
+try:
+    _ensure_credentials_file()
+except Exception:
+    pass
 
 
 def get_auth_url() -> str:
@@ -53,7 +52,7 @@ def get_auth_url() -> str:
 
 
 def handle_callback(authorization_code: str) -> dict:
-    """Gestisce il callback OAuth2 e salva il token."""
+    """Gestisce il callback OAuth2 e salva il token nel DB."""
     flow = Flow.from_client_secrets_file(
         CREDENTIALS_FILE,
         scopes=SCOPES,
@@ -62,7 +61,6 @@ def handle_callback(authorization_code: str) -> dict:
     flow.fetch_token(code=authorization_code)
     creds = flow.credentials
 
-    # Salva il token per sessioni future
     token_data = {
         "token": creds.token,
         "refresh_token": creds.refresh_token,
@@ -71,19 +69,16 @@ def handle_callback(authorization_code: str) -> dict:
         "client_secret": creds.client_secret,
         "scopes": creds.scopes,
     }
-    with open(TOKEN_FILE, "w") as f:
-        json.dump(token_data, f)
+    save_json("google_token", token_data)
 
     return {"status": "authenticated"}
 
 
 def get_credentials() -> Optional[Credentials]:
-    """Carica le credenziali salvate, rinnovandole se necessario."""
-    if not os.path.exists(TOKEN_FILE):
+    """Carica le credenziali salvate dal DB, rinnovandole se necessario."""
+    token_data = load_json("google_token")
+    if token_data is None:
         return None
-
-    with open(TOKEN_FILE) as f:
-        token_data = json.load(f)
 
     creds = Credentials(
         token=token_data["token"],
@@ -96,10 +91,8 @@ def get_credentials() -> Optional[Credentials]:
 
     if creds.expired and creds.refresh_token:
         creds.refresh(Request())
-        # Aggiorna il token salvato
         token_data["token"] = creds.token
-        with open(TOKEN_FILE, "w") as f:
-            json.dump(token_data, f)
+        save_json("google_token", token_data)
 
     return creds
 

@@ -31,6 +31,7 @@ app = FastAPI(title="EasyFlow API", version="0.1.0")
 
 # CORS per permettere al frontend Next.js di comunicare con il backend
 ALLOWED_ORIGINS = os.getenv("ALLOWED_ORIGINS", "http://localhost:3000").split(",")
+FRONTEND_URL = os.getenv("FRONTEND_URL", "http://localhost:3000")
 app.add_middleware(
     CORSMiddleware,
     allow_origins=ALLOWED_ORIGINS,
@@ -155,7 +156,7 @@ def auth_callback(code: str = Query(...)):
     try:
         result = gcal.handle_callback(code)
         # Redirect al frontend dopo l'autenticazione
-        return RedirectResponse(url="http://localhost:3000?auth=success")
+        return RedirectResponse(url=f"{FRONTEND_URL}?auth=success")
     except Exception as e:
         raise HTTPException(status_code=400, detail=str(e))
 
