@@ -310,9 +310,13 @@ def update_calendar_event(event_id: str, body: CalendarEventUpdate):
     """Aggiorna gli orari di un evento su Google Calendar."""
     try:
         updated = gcal.update_event_times(event_id, end_datetime=body.end, start_datetime=body.start)
+        if updated is None:
+            raise HTTPException(status_code=404, detail="Evento non trovato")
         return {"updated": True, "event": updated}
     except ValueError as e:
         raise HTTPException(status_code=401, detail=str(e))
+    except HTTPException:
+        raise
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
 
@@ -325,6 +329,8 @@ def delete_calendar_event(event_id: str):
         return {"deleted": True}
     except ValueError as e:
         raise HTTPException(status_code=401, detail=str(e))
+    except HTTPException:
+        raise
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
 
@@ -709,6 +715,7 @@ class BomItemUpdate(BaseModel):
     moq: Optional[int] = None
     sku: Optional[str] = None
     restock_workflow: Optional[RestockWorkflowDef] = None
+    gantt_section_id: Optional[str] = None
 
 
 class ProductionCheckRequest(BaseModel):
@@ -857,6 +864,74 @@ def get_shopify_stock_for_bom():
         return {"configured": True, "products": stock}
     except Exception as e:
         return {"configured": True, "products": [], "error": str(e)}
+
+
+def _normalize_name(name: str) -> str:
+    """Lowercase, remove non-alphanumeric chars — mirrors frontend normalizeProductName."""
+    import re
+    return re.sub(r"[^a-z0-9]", "", name.lower())
+
+
+@app.post("/api/inventory/sync-shopify")
+def sync_shopify_products():
+    """Full two-way sync: create, rename, and delete products to match Shopify."""
+    if not shopify.is_configured():
+        raise HTTPException(status_code=400, detail="Shopify non configurato")
+
+    shopify_products = shopify.get_all_product_stock()  # [{id, title, total_available}]
+    data = inventory.load_data()
+    easyflow_products = data["products"]
+
+    # Build lookup maps
+    shopify_by_id = {sp["id"]: sp for sp in shopify_products}
+    shopify_by_norm = {_normalize_name(sp["title"]): sp for sp in shopify_products}
+
+    matched_shopify_ids = set()
+    created, updated, deleted = 0, 0, 0
+
+    # --- Pass 1: Match existing EasyFlow products ---
+    for prod in easyflow_products:
+        sid = prod.get("shopify_id")
+
+        if sid and sid in shopify_by_id:
+            # Linked by shopify_id — update name if changed
+            matched_shopify_ids.add(sid)
+            sp = shopify_by_id[sid]
+            if prod["name"] != sp["title"]:
+                prod["name"] = sp["title"]
+                updated += 1
+        elif not sid:
+            # No shopify_id yet — try matching by normalized name (migration)
+            norm = _normalize_name(prod["name"])
+            if norm in shopify_by_norm:
+                sp = shopify_by_norm[norm]
+                prod["shopify_id"] = sp["id"]
+                matched_shopify_ids.add(sp["id"])
+                if prod["name"] != sp["title"]:
+                    prod["name"] = sp["title"]
+                    updated += 1
+
+    # --- Pass 2: Create new products for unmatched Shopify products ---
+    for sp in shopify_products:
+        if sp["id"] not in matched_shopify_ids:
+            new_prod = inventory.add_product(sp["title"], shopify_id=sp["id"])
+            easyflow_products.append(new_prod)
+            created += 1
+
+    # --- Pass 3: Delete EasyFlow products whose shopify_id no longer exists ---
+    to_delete = [
+        p["id"] for p in easyflow_products
+        if p.get("shopify_id") and p["shopify_id"] not in shopify_by_id
+    ]
+    for pid in to_delete:
+        inventory.delete_product(pid)
+        deleted += 1
+
+    # Save any in-place updates from pass 1
+    if updated > 0:
+        inventory.save_data(data)
+
+    return {"created": created, "updated": updated, "deleted": deleted}
 
 
 # --- Suppliers ---

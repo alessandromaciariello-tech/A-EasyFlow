@@ -407,6 +407,7 @@ export interface BomItem {
   moq: number;
   sku: string;
   restock_workflow: RestockWorkflow | null;
+  gantt_section_id: string | null;
   children: BomItem[];
 }
 
@@ -415,6 +416,7 @@ export interface BomProduct {
   name: string;
   collapsed: boolean;
   desired_stock: number | null;
+  shopify_id?: number | null;
   children: BomItem[];
 }
 
@@ -433,81 +435,6 @@ export interface InventoryData {
   products: BomProduct[];
   suppliers: Supplier[];
   restock_templates: RestockTemplate[];
-}
-
-export interface ProductionLine {
-  component_id: string;
-  name: string;
-  needed: number;
-  in_stock: number;
-  missing: number;
-  unit: string;
-  unit_cost: number;
-  missing_cost: number;
-  supplier: string;
-  lead_time_days: number;
-}
-
-export interface ProductionCheckResult {
-  product_id: string;
-  quantity: number;
-  producible: boolean;
-  total_missing_cost: number;
-  max_lead_time_days: number;
-  lines: ProductionLine[];
-}
-
-// --- Max Producible ---
-
-export interface MaxProducibleLeaf {
-  id: string;
-  name: string;
-  needed_per_unit: number;
-  in_stock: number;
-  max_units: number;
-  supplier: string;
-  unit_cost: number;
-  lead_time_days: number;
-}
-
-export interface MaxProducibleResult {
-  product_id: string;
-  max_producible: number;
-  bottleneck: string | null;
-  leaves: MaxProducibleLeaf[];
-}
-
-export async function getMaxProducible(productId: string): Promise<MaxProducibleResult> {
-  const res = await fetch(`${API_BASE}/api/inventory/products/${productId}/max-producible`);
-  if (!res.ok) throw new Error("Errore nel calcolo unità producibili");
-  return res.json();
-}
-
-// --- Shopify Stock per BOM ---
-
-export interface ShopifyProductStock {
-  title: string;
-  total_available: number;
-}
-
-export interface ShopifyStockForBom {
-  configured: boolean;
-  products: ShopifyProductStock[];
-}
-
-export async function getShopifyStockForBom(): Promise<ShopifyStockForBom> {
-  try {
-    const res = await fetch(`${API_BASE}/api/inventory/shopify-stock`);
-    if (!res.ok) return { configured: false, products: [] };
-    return res.json();
-  } catch {
-    return { configured: false, products: [] };
-  }
-}
-
-/** Normalizza un nome prodotto per matching: lowercase, rimuovi non-alfanumerici */
-export function normalizeProductName(name: string): string {
-  return name.toLowerCase().replace(/[^a-z0-9]/g, "");
 }
 
 // --- Inventory API (recursive tree) ---
@@ -601,16 +528,9 @@ export async function deleteBomItem(
   if (!res.ok) throw new Error("Errore nell'eliminazione dell'item");
 }
 
-export async function checkProduction(
-  productId: string,
-  quantity: number
-): Promise<ProductionCheckResult> {
-  const res = await fetch(`${API_BASE}/api/inventory/production-check`, {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ product_id: productId, quantity }),
-  });
-  if (!res.ok) throw new Error("Errore nella verifica produzione");
+export async function syncShopifyProducts(): Promise<{ created: number; updated: number; deleted: number }> {
+  const res = await fetch(`${API_BASE}/api/inventory/sync-shopify`, { method: "POST" });
+  if (!res.ok) throw new Error("Errore sync Shopify");
   return res.json();
 }
 
@@ -638,38 +558,7 @@ export async function addSupplier(
   return data.suppliers;
 }
 
-export async function updateSupplier(name: string, updates: Partial<Omit<Supplier, "name">>): Promise<Supplier[]> {
-  const res = await fetch(
-    `${API_BASE}/api/inventory/suppliers/${encodeURIComponent(name)}`,
-    {
-      method: "PATCH",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(updates),
-    }
-  );
-  if (!res.ok) throw new Error("Errore nell'aggiornamento del fornitore");
-  const data = await res.json();
-  return data.suppliers;
-}
-
-export async function deleteSupplier(name: string): Promise<Supplier[]> {
-  const res = await fetch(
-    `${API_BASE}/api/inventory/suppliers/${encodeURIComponent(name)}`,
-    { method: "DELETE" }
-  );
-  if (!res.ok) throw new Error("Errore nell'eliminazione del fornitore");
-  const data = await res.json();
-  return data.suppliers;
-}
-
 // --- Restock Template API ---
-
-export async function getRestockTemplates(): Promise<RestockTemplate[]> {
-  const res = await fetch(`${API_BASE}/api/inventory/restock-templates`);
-  if (!res.ok) throw new Error("Errore nel caricamento template");
-  const data = await res.json();
-  return data.templates;
-}
 
 export async function createRestockTemplate(data: {
   name: string;
@@ -702,19 +591,6 @@ export async function deleteRestockTemplate(id: string): Promise<void> {
     method: "DELETE",
   });
   if (!res.ok) throw new Error("Errore nell'eliminazione del template");
-}
-
-// --- Utility ---
-
-export function computeLeadTimeDays(workflow: RestockWorkflow | null): number {
-  if (!workflow || !workflow.phases.length) return 0;
-  return Math.max(
-    ...workflow.phases.map((p) =>
-      p.tasks
-        .filter((t) => (t.duration_type || "fixed") === "fixed")
-        .reduce((sum, t) => sum + t.duration_days, 0)
-    )
-  );
 }
 
 // --- Shopify Types ---
@@ -819,113 +695,3 @@ export async function getShopifyGanttSuggestions(
   return res.json();
 }
 
-// --- Restock Engine Types ---
-
-export interface ComponentRecommendation {
-  component_id: string;
-  name: string;
-  needed_per_unit: number;
-  raw_qty: number;
-  moq: number;
-  order_qty: number;
-  supplier: string;
-  unit_cost: number;
-  total_cost: number;
-  lead_time_days: number;
-  in_stock: number;
-}
-
-export interface RestockRecommendation {
-  product_id: string;
-  product_name: string;
-  urgency: "red" | "yellow" | "green";
-  needs_reorder: boolean;
-  current_stock: number;
-  demand_rate: number;
-  demand_std: number;
-  spike_detected: boolean;
-  days_of_cover: number | null;
-  target_cover_days: number;
-  max_lead_time_days: number;
-  reorder_qty: number;
-  order_date: string | null;
-  total_cost: number;
-  components: ComponentRecommendation[];
-}
-
-export interface RestockSettings {
-  safety_stock_days: number;
-  demand_window_days: number;
-  spike_threshold_k: number;
-  deep_work_start: string;
-  deep_work_end: string;
-  noise_start: string;
-  noise_end: string;
-  onboarding_completed: boolean;
-}
-
-export interface OnboardingStatus {
-  completed: boolean;
-  has_products: boolean;
-  has_suppliers: boolean;
-}
-
-export interface RestockConfirmResult {
-  section: GanttSection;
-  product_id: string;
-  product_name: string;
-  reorder_qty: number;
-  total_lead_time_days: number;
-  expected_completion: string;
-}
-
-// --- Restock Engine API ---
-
-export async function getRestockRecommendations(): Promise<RestockRecommendation[]> {
-  const res = await fetch(`${API_BASE}/api/restock/recommendations`);
-  if (!res.ok) throw new Error("Errore nel caricamento raccomandazioni restock");
-  const data = await res.json();
-  return data.recommendations;
-}
-
-export async function confirmRestock(
-  productId: string,
-  reorderQty: number,
-  components?: { component_id: string; order_qty: number }[]
-): Promise<RestockConfirmResult> {
-  const res = await fetch(`${API_BASE}/api/restock/confirm`, {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({
-      product_id: productId,
-      reorder_qty: reorderQty,
-      components,
-    }),
-  });
-  if (!res.ok) throw new Error("Errore nella conferma restock");
-  return res.json();
-}
-
-export async function getRestockSettings(): Promise<RestockSettings> {
-  const res = await fetch(`${API_BASE}/api/restock/settings`);
-  if (!res.ok) throw new Error("Errore nel caricamento impostazioni");
-  return res.json();
-}
-
-export async function updateRestockSettings(
-  updates: Partial<RestockSettings>
-): Promise<RestockSettings> {
-  const res = await fetch(`${API_BASE}/api/restock/settings`, {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify(updates),
-  });
-  if (!res.ok) throw new Error("Errore nell'aggiornamento impostazioni");
-  return res.json();
-}
-
-export async function getOnboardingStatus(): Promise<OnboardingStatus> {
-  const res = await fetch(`${API_BASE}/api/settings/onboarding-status`);
-  if (!res.ok) throw new Error("Errore nel controllo onboarding");
-  return res.json();
-}

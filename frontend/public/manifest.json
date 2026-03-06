@@ -1,0 +1,14 @@
+{
+  "name": "EasyFlow",
+  "short_name": "EasyFlow",
+  "description": "AI Project Manager",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#EDEBE7",
+  "theme_color": "#2D6A4F",
+  "orientation": "any",
+  "icons": [
+    { "src": "/icon-192.png", "sizes": "192x192", "type": "image/png" },
+    { "src": "/icon-512.png", "sizes": "512x512", "type": "image/png" }
+  ]
+}

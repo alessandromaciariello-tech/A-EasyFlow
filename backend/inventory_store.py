@@ -106,6 +106,9 @@ def load_data() -> Dict:
                 if "sku" not in item:
                     item["sku"] = ""
                     changed = True
+                if "gantt_section_id" not in item:
+                    item["gantt_section_id"] = None
+                    changed = True
                 if item.get("children"):
                     if _migrate_items(item["children"]):
                         changed = True
@@ -125,15 +128,17 @@ def save_data(data: Dict) -> None:
 
 # --- Product CRUD (root level) ---
 
-def add_product(name: str) -> Dict:
+def add_product(name: str, shopify_id: Optional[int] = None) -> Dict:
     data = load_data()
-    product = {
+    product: Dict = {
         "id": _generate_id(),
         "name": name,
         "collapsed": False,
         "desired_stock": None,
         "children": [],
     }
+    if shopify_id is not None:
+        product["shopify_id"] = shopify_id
     data["products"].append(product)
     save_data(data)
     return product
@@ -195,6 +200,7 @@ def add_child(
                 "moq": moq,
                 "sku": sku,
                 "restock_workflow": restock_workflow,
+                "gantt_section_id": None,
                 "children": [],
             }
             parent["children"].append(child)

@@ -11,6 +11,7 @@ from google.oauth2.credentials import Credentials
 from google_auth_oauthlib.flow import Flow
 from google.auth.transport.requests import Request
 from googleapiclient.discovery import build
+from googleapiclient.errors import HttpError
 
 SCOPES = ["https://www.googleapis.com/auth/calendar"]
 CREDENTIALS_FILE = os.path.join(os.path.dirname(__file__), "..", "credentials.json")
@@ -184,22 +185,32 @@ def create_event(title: str, start: str, end: str, description: str = "") -> dic
     return event
 
 
-def update_event_times(event_id: str, end_datetime: Optional[str] = None, start_datetime: Optional[str] = None) -> dict:
-    """Aggiorna gli orari di un evento su Google Calendar."""
+def update_event_times(event_id: str, end_datetime: Optional[str] = None, start_datetime: Optional[str] = None) -> Optional[dict]:
+    """Aggiorna gli orari di un evento su Google Calendar. Torna None se l'evento non esiste."""
     service = get_calendar_service()
     body: dict = {}
     if start_datetime:
         body["start"] = {"dateTime": start_datetime, "timeZone": "Europe/Rome"}
     if end_datetime:
         body["end"] = {"dateTime": end_datetime, "timeZone": "Europe/Rome"}
-    return service.events().patch(
-        calendarId="primary",
-        eventId=event_id,
-        body=body,
-    ).execute()
+    try:
+        return service.events().patch(
+            calendarId="primary",
+            eventId=event_id,
+            body=body,
+        ).execute()
+    except HttpError as e:
+        if e.resp.status in (404, 410):
+            return None
+        raise
 
 
 def delete_event(event_id: str) -> None:
-    """Elimina un evento dal Google Calendar."""
+    """Elimina un evento dal Google Calendar. Ignora se gia' cancellato (404/410)."""
     service = get_calendar_service()
-    service.events().delete(calendarId="primary", eventId=event_id).execute()
+    try:
+        service.events().delete(calendarId="primary", eventId=event_id).execute()
+    except HttpError as e:
+        if e.resp.status in (404, 410):
+            return
+        raise

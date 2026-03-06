@@ -85,10 +85,28 @@ h3 {
   }
 
   .chat-pill-container {
-    @apply fixed bottom-8 left-8 w-[calc(30%-3rem)] max-w-lg z-50;
+    @apply fixed bottom-8 left-4 right-4 max-w-lg z-50;
     @apply rounded-full border border-black/[0.04];
     background: var(--color-neutral-light);
     box-shadow: 0 4px 20px rgba(60, 50, 40, 0.05), inset 0 1px 1px rgba(255, 255, 255, 0.8);
+  }
+
+  @media (min-width: 768px) {
+    .chat-pill-container {
+      @apply left-8 right-auto w-[calc(30%-3rem)];
+    }
+  }
+
+  .safe-top {
+    padding-top: env(safe-area-inset-top);
+  }
+
+  .safe-bottom {
+    padding-bottom: env(safe-area-inset-bottom);
+  }
+
+  .card-container-mobile {
+    @apply bg-white;
   }
 
   .press-scale {

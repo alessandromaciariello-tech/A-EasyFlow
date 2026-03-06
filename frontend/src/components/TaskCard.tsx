@@ -64,9 +64,7 @@ export default function TaskCard({
     if (!onComplete || completing) return;
     setChecked(true);
     setCompleting(true);
-    setTimeout(() => {
-      onComplete();
-    }, 400);
+    onComplete();
   };
 
   // Evento fisso dal calendario (non EasyFlow)

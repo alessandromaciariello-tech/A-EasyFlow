@@ -1,18 +1,65 @@
 {
   "products": [
     {
-      "id": "dc5452dd",
-      "name": "Pear Phone",
-      "collapsed": false,
-      "desired_stock": null,
-      "children": []
-    },
-    {
       "id": "a9b83d83",
       "name": "Phone Case",
       "collapsed": false,
       "desired_stock": null,
-      "children": []
+      "children": [
+        {
+          "id": "389f68f1",
+          "name": "pezzi 1",
+          "quantity": 1,
+          "supplier": "",
+          "unit_cost": 0.0,
+          "quantity_in_stock": 0,
+          "collapsed": false,
+          "moq": 1,
+          "sku": "",
+          "restock_workflow": null,
+          "gantt_section_id": null,
+          "children": [
+            {
+              "id": "89dab769",
+              "name": "pezzo a",
+              "quantity": 1,
+              "supplier": "",
+              "unit_cost": 0.0,
+              "quantity_in_stock": 0,
+              "collapsed": false,
+              "moq": 1,
+              "sku": "",
+              "restock_workflow": null,
+              "gantt_section_id": null,
+              "children": []
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "dcaf3187",
+      "name": "EasyFlow Enterprise Subscription",
+      "collapsed": false,
+      "desired_stock": null,
+      "children": [],
+      "shopify_id": 15978562945359
+    },
+    {
+      "id": "28de6975",
+      "name": "EasyFlow Standard Subscription",
+      "collapsed": false,
+      "desired_stock": null,
+      "children": [],
+      "shopify_id": 15978504978767
+    },
+    {
+      "id": "ca01f2f7",
+      "name": "Phone",
+      "collapsed": false,
+      "desired_stock": null,
+      "children": [],
+      "shopify_id": 15933818765647
     }
   ],
   "suppliers": [
@@ -211,6 +258,69 @@
               "id": "5fdd6dea",
               "name": "1",
               "duration_days": 1
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "b714a20a",
+      "name": "Ordine Standard",
+      "phases": [
+        {
+          "id": "e9e9303e",
+          "name": "Ordine",
+          "color": "#3B82F6",
+          "tasks": [
+            {
+              "id": "00ebe426",
+              "name": "Richiesta Preventivo",
+              "duration_days": 1,
+              "duration_type": "fixed",
+              "per_unit_duration_days": null,
+              "min_duration_days": null,
+              "max_duration_days": null
+            },
+            {
+              "id": "b0d2c200",
+              "name": "Conferma Ordine",
+              "duration_days": 1,
+              "duration_type": "fixed",
+              "per_unit_duration_days": null,
+              "min_duration_days": null,
+              "max_duration_days": null
+            }
+          ]
+        },
+        {
+          "id": "c44fb349",
+          "name": "Produzione",
+          "color": "#10B981",
+          "tasks": [
+            {
+              "id": "8cee86a0",
+              "name": "Tempo di Produzione",
+              "duration_days": 0,
+              "duration_type": "variable",
+              "per_unit_duration_days": null,
+              "min_duration_days": null,
+              "max_duration_days": null
+            }
+          ]
+        },
+        {
+          "id": "4e477b80",
+          "name": "Ritiro",
+          "color": "#F59E0B",
+          "tasks": [
+            {
+              "id": "21905517",
+              "name": "Ritiro Componente",
+              "duration_days": 1,
+              "duration_type": "fixed",
+              "per_unit_duration_days": null,
+              "min_duration_days": null,
+              "max_duration_days": null
             }
           ]
         }

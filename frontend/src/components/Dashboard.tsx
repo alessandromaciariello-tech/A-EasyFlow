@@ -32,13 +32,14 @@ function getWeekDates(referenceDate: Date): Date[] {
   });
 }
 
-type SourceFilter = "all" | "calendar" | "microtask" | "supplychain";
+type SourceFilter = "all" | "calendar" | "microtask" | "supplychain" | "gantt";
 
 const SOURCE_FILTERS: { key: SourceFilter; label: string }[] = [
   { key: "all", label: "Tutti" },
   { key: "calendar", label: "Calendario" },
   { key: "microtask", label: "Task" },
   { key: "supplychain", label: "Supply Chain" },
+  { key: "gantt", label: "Gantt" },
 ];
 
 function parseEventTags(event: CalendarEvent): {
@@ -62,7 +63,7 @@ function parseEventTags(event: CalendarEvent): {
     const srcMatch = params.match(/source=(\w+)/);
     if (srcMatch) {
       const s = srcMatch[1];
-      if (s === "microtask" || s === "supplychain") source = s;
+      if (s === "microtask" || s === "supplychain" || s === "gantt") source = s;
     }
     const statMatch = params.match(/status=(\w+)/);
     if (statMatch) {

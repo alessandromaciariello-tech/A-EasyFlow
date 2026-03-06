@@ -182,7 +182,7 @@ def get_all_product_stock() -> List[Dict[str, Any]]:
     all_ids: List[int] = []
 
     for pi, product in enumerate(products):
-        product_agg[pi] = {"title": product.get("title", ""), "total_available": 0}
+        product_agg[pi] = {"id": product.get("id"), "title": product.get("title", ""), "total_available": 0}
         for variant in product.get("variants", []):
             inv_id = variant.get("inventory_item_id")
             if inv_id:

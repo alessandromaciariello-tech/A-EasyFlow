@@ -622,7 +622,7 @@ function TemplateModal({
 // MAIN COMPONENT
 // ==========================================
 
-export default function GanttChart() {
+export default function GanttChart({ onGanttChanged }: { onGanttChanged?: () => void } = {}) {
   const [project, setProject] = useState<GanttProject | null>(null);
   const [loading, setLoading] = useState(true);
 
@@ -684,8 +684,9 @@ export default function GanttChart() {
       setProject(null);
     } finally {
       setLoading(false);
+      onGanttChanged?.();
     }
-  }, []);
+  }, [onGanttChanged]);
 
   useEffect(() => {
     fetchProject();

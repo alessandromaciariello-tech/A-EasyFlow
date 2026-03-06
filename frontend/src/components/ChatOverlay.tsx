@@ -50,7 +50,7 @@ export default function ChatOverlay({ messages, loading, onConfirm, onCancel }: 
     if (!loading && !activeTasks && !toast) return null;
 
     return (
-        <div className="fixed bottom-24 left-8 w-[calc(30%-3rem)] max-w-lg z-40 flex flex-col gap-2 pointer-events-none">
+        <div className="fixed bottom-24 left-4 right-4 md:right-auto md:left-8 md:w-[calc(30%-3rem)] max-w-lg z-40 flex flex-col gap-2 pointer-events-none">
             <AnimatePresence>
                 {/* Loading indicator */}
                 {loading && (

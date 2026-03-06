@@ -5,33 +5,29 @@ import {
   BomItem,
   BomProduct,
   InventoryData,
-  RestockWorkflow,
-  RestockTemplate,
   Supplier,
   updateBomProduct,
-  createBomProduct,
   deleteBomProduct,
   addBomChild,
   updateBomItem,
   deleteBomItem,
   addSupplier,
+  deleteGanttSection,
 } from "@/lib/api";
 import {
   flattenBom,
   ItemForm,
   ItemFormData,
-  RestockWorkflowEditor,
 } from "./ProductsDashboard";
 
-/* ---- Constants (same as GanttChart) ---- */
+/* ---- Constants ---- */
 const ROW_HEIGHT = 40;
 const SECTION_ROW_HEIGHT = 44;
-const DAY_WIDTH = 40;
 const EDIT_ROW_HEIGHT = 80;
 
 const GANTT_COLORS = ["#3B82F6", "#06B6D4", "#8B5CF6", "#F97316", "#22C55E", "#EF4444", "#EC4899", "#EAB308"];
 
-/* ---- ProgressRing (same as GanttChart) ---- */
+/* ---- ProgressRing ---- */
 
 function ProgressRing({ progress, size = 22 }: { progress: number; size?: number }) {
   const radius = (size - 4) / 2;
@@ -54,45 +50,6 @@ function ProgressRing({ progress, size = 22 }: { progress: number; size?: number
 function formatDuration(days: number): string {
   if (days <= 0) return "—";
   return `${days}g`;
-}
-
-/* ---- Date helpers ---- */
-
-function formatLocalDate(d: Date): string {
-  const y = d.getFullYear();
-  const m = String(d.getMonth() + 1).padStart(2, "0");
-  const day = String(d.getDate()).padStart(2, "0");
-  return `${y}-${m}-${day}`;
-}
-
-function todayStr(): string {
-  return formatLocalDate(new Date());
-}
-
-function addDays(dateStr: string, days: number): string {
-  const d = new Date(dateStr + "T12:00:00");
-  d.setDate(d.getDate() + days);
-  return formatLocalDate(d);
-}
-
-function diffDays(a: string, b: string): number {
-  const da = new Date(a + "T00:00:00");
-  const db = new Date(b + "T00:00:00");
-  return Math.round((db.getTime() - da.getTime()) / 86400000);
-}
-
-function getMonthLabel(dateStr: string): string {
-  const d = new Date(dateStr + "T00:00:00");
-  return d.toLocaleDateString("en-US", { month: "short", year: "numeric" });
-}
-
-function getDayLabel(dateStr: string): string {
-  return new Date(dateStr + "T00:00:00").getDate().toString();
-}
-
-function getDayOfWeek(dateStr: string): string {
-  const d = new Date(dateStr + "T00:00:00");
-  return ["S", "M", "T", "W", "T", "F", "S"][d.getDay()];
 }
 
 /* ---- Row types ---- */
@@ -161,52 +118,16 @@ function findItemInProducts(products: BomProduct[], productId: string, itemId: s
 }
 
 /* ================================================================
-   BomGantt Component
+   BomGantt Component — BOM tree editor
    ================================================================ */
 
 interface BomGanttProps {
   data: InventoryData;
   onChanged: () => void;
+  onGanttChanged?: () => void;
 }
 
-export default function BomGantt({ data, onChanged }: BomGanttProps) {
-  const today = todayStr();
-
-  // Timeline range
-  let maxLT = 14;
-  for (const p of data.products) {
-    const plt = getProductMaxLeadTime(p);
-    if (plt > maxLT) maxLT = plt;
-  }
-  const range = { start: addDays(today, -3), end: addDays(today, maxLT + 7) };
-
-  // Generate days array
-  const days: string[] = [];
-  {
-    let d = range.start;
-    while (d <= range.end) {
-      days.push(d);
-      d = addDays(d, 1);
-    }
-  }
-  const totalDays = days.length;
-  const todayOffset = diffDays(range.start, today);
-
-  // Months for header
-  const months: { label: string; span: number }[] = [];
-  {
-    let currentMonth = "";
-    for (const day of days) {
-      const label = getMonthLabel(day);
-      if (label !== currentMonth) {
-        months.push({ label, span: 1 });
-        currentMonth = label;
-      } else {
-        months[months.length - 1].span++;
-      }
-    }
-  }
-
+export default function BomGantt({ data, onChanged, onGanttChanged }: BomGanttProps) {
   // Flatten rows
   const rows = buildRows(data.products);
 
@@ -221,49 +142,27 @@ export default function BomGantt({ data, onChanged }: BomGanttProps) {
     });
 
   // --- State ---
-  const [addingProductName, setAddingProductName] = useState("");
-  const [showAddProduct, setShowAddProduct] = useState(false);
   const [editingProduct, setEditingProduct] = useState<string | null>(null);
   const [editProductName, setEditProductName] = useState("");
   const [addingChild, setAddingChild] = useState<{ parentId: string; productId: string } | null>(null);
   const [childForm, setChildForm] = useState<ItemFormData>({ name: "", quantity: 1, supplier: "", unit_cost: 0, moq: 1, sku: "" });
   const [editingItem, setEditingItem] = useState<{ itemId: string; productId: string } | null>(null);
   const [editForm, setEditForm] = useState<ItemFormData>({ name: "", quantity: 1, supplier: "", unit_cost: 0, moq: 1, sku: "" });
-  const [workflowItem, setWorkflowItem] = useState<{ itemId: string; productId: string } | null>(null);
   const [suppliers, setSuppliers] = useState<Supplier[]>(data.suppliers || []);
-  const [templates, setTemplates] = useState<RestockTemplate[]>(data.restock_templates || []);
 
   useEffect(() => {
     setSuppliers(data.suppliers || []);
-    setTemplates(data.restock_templates || []);
   }, [data]);
 
   const emptyForm: ItemFormData = { name: "", quantity: 1, supplier: "", unit_cost: 0, moq: 1, sku: "" };
 
-  // --- Product color (like Gantt section color) ---
+  // --- Product color ---
   const getProductColor = (productId: string) => {
     const idx = data.products.findIndex((p) => p.id === productId);
     return GANTT_COLORS[Math.max(0, idx) % GANTT_COLORS.length];
   };
 
-  // --- Drag state ---
-  const [drag, setDrag] = useState<{
-    productId: string;
-    itemId: string;
-    origTotalDays: number;
-    startX: number;
-    currentDayDelta: number;
-  } | null>(null);
-
   // --- Handlers ---
-
-  const handleAddProduct = async () => {
-    if (!addingProductName.trim()) return;
-    await createBomProduct(addingProductName.trim());
-    setAddingProductName("");
-    setShowAddProduct(false);
-    onChanged();
-  };
 
   const handleDeleteProduct = async (id: string) => {
     await deleteBomProduct(id);
@@ -322,19 +221,19 @@ export default function BomGantt({ data, onChanged }: BomGanttProps) {
   };
 
   const handleDeleteItem = async (productId: string, itemId: string) => {
+    const item = findItemInProducts(data.products, productId, itemId);
+    const hadGantt = !!item?.gantt_section_id;
+    if (hadGantt) {
+      try { await deleteGanttSection(item!.gantt_section_id!); } catch { /* ignore */ }
+    }
     await deleteBomItem(productId, itemId);
     onChanged();
+    if (hadGantt) onGanttChanged?.();
   };
 
   const handleAddNewSupplier = async (name: string) => {
     const updated = await addSupplier(name);
     setSuppliers(updated);
-  };
-
-  const handleSaveWorkflow = async (productId: string, itemId: string, workflow: RestockWorkflow | null) => {
-    await updateBomItem(productId, itemId, { restock_workflow: workflow });
-    setWorkflowItem(null);
-    onChanged();
   };
 
   // --- Batch delete ---
@@ -343,9 +242,25 @@ export default function BomGantt({ data, onChanged }: BomGanttProps) {
     const productIdSet = new Set(data.products.map((p) => p.id));
     const deletedProducts = new Set<string>();
 
-    // 1. Delete selected products first
+    // Helper: collect all gantt_section_ids from items recursively
+    const collectGanttIds = (items: BomItem[]): string[] => {
+      const ids: string[] = [];
+      for (const item of items) {
+        if (item.gantt_section_id) ids.push(item.gantt_section_id);
+        if (item.children.length > 0) ids.push(...collectGanttIds(item.children));
+      }
+      return ids;
+    };
+
+    // 1. Delete selected products first (clean up gantt sections)
     for (const id of selected) {
       if (productIdSet.has(id)) {
+        const product = data.products.find((p) => p.id === id);
+        if (product) {
+          for (const gid of collectGanttIds(product.children)) {
+            try { await deleteGanttSection(gid); } catch { /* ignore */ }
+          }
+        }
         try { await deleteBomProduct(id); } catch { /* ignore */ }
         deletedProducts.add(id);
       }
@@ -356,14 +271,19 @@ export default function BomGantt({ data, onChanged }: BomGanttProps) {
       if (productIdSet.has(id)) continue;
       for (const product of data.products) {
         if (deletedProducts.has(product.id)) continue;
-        const search = (items: BomItem[]): boolean => {
+        const findItem = (items: BomItem[]): BomItem | null => {
           for (const item of items) {
-            if (item.id === id) return true;
-            if (search(item.children)) return true;
+            if (item.id === id) return item;
+            const found = findItem(item.children);
+            if (found) return found;
           }
-          return false;
+          return null;
         };
-        if (search(product.children)) {
+        const bomItem = findItem(product.children);
+        if (bomItem) {
+          for (const gid of collectGanttIds([bomItem])) {
+            try { await deleteGanttSection(gid); } catch { /* ignore */ }
+          }
           try { await deleteBomItem(product.id, id); } catch { /* ignore */ }
           break;
         }
@@ -372,54 +292,8 @@ export default function BomGantt({ data, onChanged }: BomGanttProps) {
 
     setSelected(new Set());
     onChanged();
+    onGanttChanged?.();
   };
-
-  // --- Drag handlers (resize bar) ---
-
-  const handleDragStart = (e: React.MouseEvent, productId: string, itemId: string) => {
-    e.preventDefault();
-    e.stopPropagation();
-    const item = findItemInProducts(data.products, productId, itemId);
-    if (!item?.restock_workflow) return;
-    const totalDaysVal = getItemLeadTime(item);
-    if (totalDaysVal <= 0) return;
-    setDrag({ productId, itemId, origTotalDays: totalDaysVal, startX: e.clientX, currentDayDelta: 0 });
-  };
-
-  useEffect(() => {
-    if (!drag) return;
-    const handleMouseMove = (e: MouseEvent) => {
-      const delta = Math.round((e.clientX - drag.startX) / DAY_WIDTH);
-      if (delta !== drag.currentDayDelta) {
-        setDrag((prev) => (prev ? { ...prev, currentDayDelta: delta } : null));
-      }
-    };
-    const handleMouseUp = async () => {
-      if (!drag) return;
-      const { productId, itemId, origTotalDays, currentDayDelta } = drag;
-      setDrag(null);
-      if (currentDayDelta === 0) return;
-      const newTotalDays = Math.max(1, origTotalDays + currentDayDelta);
-      const item = findItemInProducts(data.products, productId, itemId);
-      if (!item?.restock_workflow) return;
-      const scale = newTotalDays / origTotalDays;
-      const updatedPhases = item.restock_workflow.phases.map((p) => ({
-        ...p,
-        tasks: p.tasks.map((t) => ({
-          ...t,
-          duration_days: t.duration_type === "fixed" ? Math.max(1, Math.round(t.duration_days * scale)) : t.duration_days,
-        })),
-      }));
-      await updateBomItem(productId, itemId, { restock_workflow: { phases: updatedPhases } });
-      onChanged();
-    };
-    document.addEventListener("mousemove", handleMouseMove);
-    document.addEventListener("mouseup", handleMouseUp);
-    return () => {
-      document.removeEventListener("mousemove", handleMouseMove);
-      document.removeEventListener("mouseup", handleMouseUp);
-    };
-  }, [drag, data.products, onChanged]);
 
   // --- Chevron icon ---
   const ChevronIcon = ({ open, className = "" }: { open: boolean; className?: string }) => (
@@ -435,9 +309,9 @@ export default function BomGantt({ data, onChanged }: BomGanttProps) {
     <div className="flex h-full flex-col">
       {/* Main scrollable area */}
       <div className="flex-1 overflow-auto">
-        <div className="flex min-w-max">
-          {/* ===== LEFT PANEL (sticky) ===== */}
-          <div className="sticky left-0 z-10 w-[400px] shrink-0 border-r border-black/[0.05] bg-white">
+        <div>
+          {/* ===== BOM TREE ===== */}
+          <div className="bg-white">
             {/* Header */}
             <div
               className="flex items-center border-b border-black/[0.05] bg-neutral-light/50 px-3 text-xs font-medium uppercase text-neutral-dark/60"
@@ -686,261 +560,13 @@ export default function BomGantt({ data, onChanged }: BomGanttProps) {
 
             {/* Empty state */}
             {data.products.length === 0 && (
-              <div className="px-4 py-8 text-center text-sm text-neutral-dark/40">Nessun prodotto. Crea il primo!</div>
+              <div className="px-4 py-8 text-center text-sm text-neutral-dark/40">
+                Nessun prodotto. Usa &quot;Importa da Shopify&quot; per importare i tuoi prodotti.
+              </div>
             )}
-
-            {/* Add section button */}
-            <div className="flex items-center gap-2 px-3 py-2 border-t border-black/[0.03]">
-              {showAddProduct ? (
-                <div className="flex gap-2 items-center flex-1">
-                  <input
-                    value={addingProductName}
-                    onChange={(e) => setAddingProductName(e.target.value)}
-                    onKeyDown={(e) => {
-                      if (e.key === "Enter") handleAddProduct();
-                      if (e.key === "Escape") { setShowAddProduct(false); setAddingProductName(""); }
-                    }}
-                    placeholder="Nome prodotto"
-                    className="flex-1 rounded border border-neutral-dark/15 px-2 py-1 text-sm"
-                    autoFocus
-                  />
-                  <button onClick={handleAddProduct} className="rounded bg-primary px-2 py-1 text-xs text-white hover:bg-primary/90">Salva</button>
-                  <button onClick={() => { setShowAddProduct(false); setAddingProductName(""); }} className="rounded border px-2 py-1 text-xs text-neutral-dark/70 hover:bg-black/[0.04]">Annulla</button>
-                </div>
-              ) : (
-                <button
-                  onClick={() => setShowAddProduct(true)}
-                  className="flex items-center gap-1 text-xs text-neutral-dark/40 hover:text-primary"
-                >
-                  <svg className="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" d="M12 4.5v15m7.5-7.5h-15" /></svg>
-                  Prodotto
-                </button>
-              )}
-            </div>
-          </div>
-
-          {/* ===== RIGHT TIMELINE ===== */}
-          <div className="flex-1">
-            {/* Timeline header */}
-            <div style={{ height: `${ROW_HEIGHT * 2}px` }} className="border-b border-black/[0.05]">
-              {/* Month row */}
-              <div className="flex" style={{ height: `${ROW_HEIGHT}px` }}>
-                {months.map((m, i) => (
-                  <div
-                    key={i}
-                    className="flex items-center border-r border-black/[0.03] px-2 text-xs font-medium text-neutral-dark/70 bg-neutral-light/50"
-                    style={{ width: `${m.span * DAY_WIDTH}px` }}
-                  >
-                    {m.label}
-                  </div>
-                ))}
-              </div>
-              {/* Day row */}
-              <div className="flex" style={{ height: `${ROW_HEIGHT}px` }}>
-                {days.map((day) => {
-                  const isToday = day === today;
-                  return (
-                    <div
-                      key={day}
-                      className={`flex flex-col items-center justify-center border-r border-black/[0.03] text-[10px] ${
-                        isToday ? "bg-primary/[0.06] font-bold text-primary" : "text-neutral-dark/40"
-                      }`}
-                      style={{ width: `${DAY_WIDTH}px` }}
-                    >
-                      <span>{getDayOfWeek(day)}</span>
-                      <span>{getDayLabel(day)}</span>
-                    </div>
-                  );
-                })}
-              </div>
-            </div>
-
-            {/* Timeline rows */}
-            <div className="relative">
-              {/* Today vertical line */}
-              {todayOffset >= 0 && todayOffset <= totalDays && (
-                <div
-                  className="absolute top-0 bottom-0 z-[5] w-[2px] bg-red-400 pointer-events-none"
-                  style={{ left: `${todayOffset * DAY_WIDTH + DAY_WIDTH / 2}px` }}
-                />
-              )}
-
-              {rows.map((row) => {
-                if (row.kind === "product") {
-                  const { product } = row;
-                  const plt = getProductMaxLeadTime(product);
-                  const barLeft = todayOffset * DAY_WIDTH;
-                  const barWidth = plt * DAY_WIDTH;
-                  const color = getProductColor(product.id);
-
-                  const isProductAddingChild = addingChild?.parentId === product.id && addingChild?.productId === product.id;
-
-                  return (
-                    <div key={`tp-${product.id}`}>
-                      <div
-                        className="relative border-b border-black/[0.03]"
-                        style={{ height: `${SECTION_ROW_HEIGHT}px` }}
-                      >
-                        {/* Day grid */}
-                        <div className="absolute inset-0 flex pointer-events-none">
-                          {days.map((day) => (
-                            <div key={day} className="border-r border-black/[0.02]" style={{ width: `${DAY_WIDTH}px` }} />
-                          ))}
-                        </div>
-
-                        {/* Summary bar (Gantt section style) */}
-                        {plt > 0 && (
-                          <div
-                            className="absolute top-2.5 h-5 rounded-full"
-                            style={{
-                              left: `${barLeft}px`,
-                              width: `${Math.max(barWidth, DAY_WIDTH)}px`,
-                              backgroundColor: color + "30",
-                            }}
-                          />
-                        )}
-                      </div>
-
-                      {/* Spacer for product add-child form */}
-                      {isProductAddingChild && (
-                        <div className="border-b border-black/[0.03] bg-green-50/20" style={{ height: `${EDIT_ROW_HEIGHT}px` }} />
-                      )}
-                    </div>
-                  );
-                }
-
-                // Item row — single unified bar (Gantt style)
-                const { item, productId } = row;
-                const itemLT = getItemLeadTime(item);
-                const hasWorkflow = itemLT > 0;
-                const isItemEditing = editingItem?.itemId === item.id && editingItem?.productId === productId;
-                const isItemAddingChild = addingChild?.parentId === item.id && addingChild?.productId === productId;
-                const color = getProductColor(productId);
-                const isDragging = drag?.itemId === item.id;
-
-                // Calculate display dimensions
-                let displayDays = itemLT;
-                if (isDragging) {
-                  displayDays = Math.max(1, drag.origTotalDays + drag.currentDayDelta);
-                }
-                const barLeft = todayOffset * DAY_WIDTH;
-                const barWidth = displayDays * DAY_WIDTH;
-
-                return (
-                  <div key={`ti-${item.id}`}>
-                    <div
-                      className={`relative border-b border-black/[0.02] ${isItemEditing ? "bg-primary/[0.03]" : ""}`}
-                      style={{ height: `${ROW_HEIGHT}px` }}
-                    >
-                      {/* Day grid */}
-                      <div className="absolute inset-0 flex pointer-events-none">
-                        {days.map((day) => (
-                          <div key={day} className="border-r border-black/[0.02]" style={{ width: `${DAY_WIDTH}px` }} />
-                        ))}
-                      </div>
-
-                      {hasWorkflow ? (
-                        /* Single unified bar (GanttChart style) */
-                        <div
-                          className={`absolute top-1.5 flex items-center rounded-md cursor-pointer ${isDragging ? "opacity-80 shadow-lg" : ""}`}
-                          style={{
-                            left: `${barLeft}px`,
-                            width: `${Math.max(barWidth, DAY_WIDTH)}px`,
-                            height: `${ROW_HEIGHT - 12}px`,
-                            backgroundColor: color + "33",
-                            transition: isDragging ? "none" : "left 0.15s, width 0.15s",
-                          }}
-                          onClick={() => setWorkflowItem({ itemId: item.id, productId })}
-                        >
-                          {/* Progress fill (0% for now) */}
-                          <div
-                            className="absolute inset-y-0 left-0 rounded-l-md pointer-events-none"
-                            style={{ width: "0%", backgroundColor: color }}
-                          />
-
-                          {/* Label */}
-                          {barWidth > DAY_WIDTH * 2 && (
-                            <span className="relative z-10 truncate px-3 text-xs font-medium pointer-events-none" style={{ color }}>
-                              {item.name}
-                            </span>
-                          )}
-
-                          {/* Right resize handle */}
-                          <div
-                            className="absolute right-0 top-0 bottom-0 w-2 cursor-ew-resize z-20 hover:bg-black/[0.06] rounded-r-md"
-                            onMouseDown={(e) => {
-                              e.stopPropagation();
-                              handleDragStart(e, productId, item.id);
-                            }}
-                            onClick={(e) => e.stopPropagation()}
-                          />
-                        </div>
-                      ) : (
-                        /* No workflow placeholder */
-                        <div
-                          className="absolute top-1.5 flex items-center rounded-md border border-dashed border-neutral-dark/15 px-3 cursor-pointer hover:border-primary/40 hover:bg-primary/[0.04]"
-                          style={{
-                            left: `${barLeft}px`,
-                            height: `${ROW_HEIGHT - 12}px`,
-                            minWidth: `${DAY_WIDTH * 3}px`,
-                          }}
-                          onClick={() => setWorkflowItem({ itemId: item.id, productId })}
-                        >
-                          <span className="text-[10px] text-neutral-dark/40 italic whitespace-nowrap">+ Workflow</span>
-                        </div>
-                      )}
-                    </div>
-
-                    {/* Spacer for edit form */}
-                    {isItemEditing && (
-                      <div className="border-b border-primary/20 bg-primary/[0.03]" style={{ height: `${EDIT_ROW_HEIGHT}px` }} />
-                    )}
-
-                    {/* Spacer for add-child form */}
-                    {isItemAddingChild && (
-                      <div className="border-b border-black/[0.03] bg-green-50/20" style={{ height: `${EDIT_ROW_HEIGHT}px` }} />
-                    )}
-                  </div>
-                );
-              })}
-
-              {/* Extra row to match add-product area in left panel */}
-              {showAddProduct && (
-                <div className="border-b border-black/[0.02]" style={{ height: `${ROW_HEIGHT}px` }} />
-              )}
-            </div>
           </div>
         </div>
       </div>
-
-      {/* ===== WORKFLOW EDITOR MODAL ===== */}
-      {workflowItem && (() => {
-        const product = data.products.find((p) => p.id === workflowItem.productId);
-        const item = product ? findItemInProducts(data.products, workflowItem.productId, workflowItem.itemId) : null;
-        if (!item) return null;
-        return (
-          <div
-            className="fixed inset-0 z-50 flex items-center justify-center bg-black/30"
-            onClick={() => setWorkflowItem(null)}
-          >
-            <div
-              className="w-[80vw] max-w-[800px] max-h-[80vh] overflow-y-auto rounded-xl bg-white p-6 shadow-xl"
-              onClick={(e) => e.stopPropagation()}
-            >
-              <h3 className="mb-3 text-sm font-semibold text-foreground">
-                Workflow: {item.name}
-              </h3>
-              <RestockWorkflowEditor
-                workflow={item.restock_workflow}
-                templates={templates}
-                onSave={(wf) => handleSaveWorkflow(workflowItem.productId, workflowItem.itemId, wf)}
-                onCancel={() => setWorkflowItem(null)}
-                onSaveAsTemplate={(tpl) => setTemplates((prev) => [...prev, tpl])}
-              />
-            </div>
-          </div>
-        );
-      })()}
     </div>
   );
 }
