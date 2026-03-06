@@ -1,13 +1,10 @@
 """
-Settings Store - JSON file persistence for user preferences.
+Settings Store - persistence for user preferences.
 Includes: restock parameters, working hours, onboarding state.
 """
-import os
 import json
 from typing import Dict
-from storage_helper import get_data_path
-
-SETTINGS_FILE = get_data_path("settings.json")
+from storage_helper import load_json, save_json
 
 
 def _default_settings() -> Dict:
@@ -24,12 +21,11 @@ def _default_settings() -> Dict:
 
 
 def load_settings() -> Dict:
-    if not os.path.exists(SETTINGS_FILE):
+    settings = load_json("settings")
+    if settings is None:
         settings = _default_settings()
         save_settings(settings)
         return settings
-    with open(SETTINGS_FILE, "r") as f:
-        settings = json.load(f)
     # Migration: ensure all keys exist
     defaults = _default_settings()
     migrated = False
@@ -43,8 +39,7 @@ def load_settings() -> Dict:
 
 
 def save_settings(settings: Dict) -> None:
-    with open(SETTINGS_FILE, "w") as f:
-        json.dump(settings, f, indent=2)
+    save_json("settings", settings)
 
 
 def update_settings(updates: Dict) -> Dict:

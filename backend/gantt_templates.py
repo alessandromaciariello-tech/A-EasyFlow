@@ -1,16 +1,11 @@
 """
 Gantt Templates - Pre-built process templates for common workflows.
-Supports hardcoded defaults + user-created custom templates (JSON persistence).
+Supports hardcoded defaults + user-created custom templates (DB persistence).
 """
-import os
 import json
 import uuid
 from typing import Any, Dict, List, Optional
-from storage_helper import get_data_path
-
-
-CUSTOM_FILE = get_data_path("gantt_custom_templates.json")
-HIDDEN_FILE = get_data_path("gantt_hidden_templates.json")
+from storage_helper import load_json, save_json
 
 
 # --- Hardcoded default templates ---
@@ -143,27 +138,19 @@ def _generate_id() -> str:
 # --- Custom templates persistence ---
 
 def _load_custom() -> List[Dict]:
-    if not os.path.exists(CUSTOM_FILE):
-        return []
-    with open(CUSTOM_FILE, "r") as f:
-        return json.load(f)
+    return load_json("templates", [])
 
 
 def _save_custom(templates: List[Dict]) -> None:
-    with open(CUSTOM_FILE, "w") as f:
-        json.dump(templates, f, indent=2)
+    save_json("templates", templates)
 
 
 def _load_hidden() -> List[str]:
-    if not os.path.exists(HIDDEN_FILE):
-        return []
-    with open(HIDDEN_FILE, "r") as f:
-        return json.load(f)
+    return load_json("hidden", [])
 
 
 def _save_hidden(ids: List[str]) -> None:
-    with open(HIDDEN_FILE, "w") as f:
-        json.dump(ids, f, indent=2)
+    save_json("hidden", ids)
 
 
 # --- Merged access ---

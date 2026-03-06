@@ -1,13 +1,10 @@
 """
-Gantt Data Store - JSON file persistence for Gantt chart data.
+Gantt Data Store - persistence for Gantt chart data.
 """
-import os
 import json
 import uuid
 from typing import Dict, List, Optional, Tuple
-from storage_helper import get_data_path
-
-GANTT_FILE = get_data_path("gantt_data.json")
+from storage_helper import load_json, save_json
 
 
 def _generate_id() -> str:
@@ -72,12 +69,11 @@ def _deep_copy_task(task: Dict, is_root: bool = True) -> Dict:
 # --- Load / Save ---
 
 def load_project() -> Dict:
-    if not os.path.exists(GANTT_FILE):
+    project = load_json("gantt")
+    if project is None:
         project = _default_project()
         save_project(project)
         return project
-    with open(GANTT_FILE, "r") as f:
-        project = json.load(f)
     # Migrate all tasks to include children/collapsed
     for section in project.get("sections", []):
         for task in section.get("tasks", []):
@@ -86,8 +82,7 @@ def load_project() -> Dict:
 
 
 def save_project(project: Dict) -> None:
-    with open(GANTT_FILE, "w") as f:
-        json.dump(project, f, indent=2)
+    save_json("gantt", project)
 
 
 # --- Section CRUD ---

@@ -1,15 +1,12 @@
 """
-Inventory Data Store - JSON file persistence for products with recursive BOM tree.
+Inventory Data Store - persistence for products with recursive BOM tree.
 Pattern: identical to gantt_store.py (recursive children[], find, add, delete).
 Includes: supplier list, restock workflow templates, per-item restock workflows.
 """
-import os
 import json
 import uuid
 from typing import Dict, List, Optional, Tuple
-from storage_helper import get_data_path
-
-INVENTORY_FILE = get_data_path("inventory_data.json")
+from storage_helper import load_json, save_json
 
 
 def _generate_id() -> str:
@@ -67,12 +64,11 @@ def _compute_lead_time(workflow: Optional[Dict]) -> int:
 # --- Load / Save ---
 
 def load_data() -> Dict:
-    if not os.path.exists(INVENTORY_FILE):
+    data = load_json("inventory")
+    if data is None:
         data = _default_data()
         save_data(data)
         return data
-    with open(INVENTORY_FILE, "r") as f:
-        data = json.load(f)
     # Migration: ensure new keys exist
     if "suppliers" not in data:
         data["suppliers"] = []
@@ -123,8 +119,7 @@ def load_data() -> Dict:
 
 
 def save_data(data: Dict) -> None:
-    with open(INVENTORY_FILE, "w") as f:
-        json.dump(data, f, indent=2)
+    save_json("inventory", data)
 
 
 # --- Product CRUD (root level) ---
