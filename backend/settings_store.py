@@ -5,8 +5,9 @@ Includes: restock parameters, working hours, onboarding state.
 import os
 import json
 from typing import Dict
+from storage_helper import get_data_path
 
-SETTINGS_FILE = os.path.join(os.path.dirname(__file__), "settings.json")
+SETTINGS_FILE = get_data_path("settings.json")
 
 
 def _default_settings() -> Dict:

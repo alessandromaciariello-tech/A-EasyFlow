@@ -5,8 +5,9 @@ import os
 import json
 import uuid
 from typing import Dict, List, Optional, Tuple
+from storage_helper import get_data_path
 
-GANTT_FILE = os.path.join(os.path.dirname(__file__), "gantt_data.json")
+GANTT_FILE = get_data_path("gantt_data.json")
 
 
 def _generate_id() -> str:

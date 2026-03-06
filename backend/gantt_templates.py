@@ -6,10 +6,11 @@ import os
 import json
 import uuid
 from typing import Any, Dict, List, Optional
+from storage_helper import get_data_path
 
 
-CUSTOM_FILE = os.path.join(os.path.dirname(__file__), "gantt_custom_templates.json")
-HIDDEN_FILE = os.path.join(os.path.dirname(__file__), "gantt_hidden_templates.json")
+CUSTOM_FILE = get_data_path("gantt_custom_templates.json")
+HIDDEN_FILE = get_data_path("gantt_hidden_templates.json")
 
 
 # --- Hardcoded default templates ---

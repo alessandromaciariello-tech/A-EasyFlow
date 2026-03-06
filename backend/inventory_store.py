@@ -7,8 +7,9 @@ import os
 import json
 import uuid
 from typing import Dict, List, Optional, Tuple
+from storage_helper import get_data_path
 
-INVENTORY_FILE = os.path.join(os.path.dirname(__file__), "inventory_data.json")
+INVENTORY_FILE = get_data_path("inventory_data.json")
 
 
 def _generate_id() -> str:
