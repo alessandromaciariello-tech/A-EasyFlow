@@ -42,14 +42,13 @@ def get_auth_url() -> str:
         CREDENTIALS_FILE,
         scopes=SCOPES,
         redirect_uri=REDIRECT_URI,
+        autogenerate_code_verifier=False,
     )
     auth_url, _ = flow.authorization_url(
         access_type="offline",
         include_granted_scopes="true",
         prompt="consent",
     )
-    # Persist PKCE code_verifier so the callback can use it (critical on Vercel serverless)
-    save_json("oauth_code_verifier", {"code_verifier": flow.code_verifier})
     return auth_url
 
 
@@ -59,11 +58,8 @@ def handle_callback(authorization_code: str) -> dict:
         CREDENTIALS_FILE,
         scopes=SCOPES,
         redirect_uri=REDIRECT_URI,
+        autogenerate_code_verifier=False,
     )
-    # Restore PKCE code_verifier saved during get_auth_url()
-    verifier_data = load_json("oauth_code_verifier")
-    if verifier_data and verifier_data.get("code_verifier"):
-        flow.code_verifier = verifier_data["code_verifier"]
     flow.fetch_token(code=authorization_code)
     creds = flow.credentials
 
