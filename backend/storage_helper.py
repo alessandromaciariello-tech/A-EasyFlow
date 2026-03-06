@@ -16,10 +16,19 @@ _conn = None
 
 def _get_conn():
     global _conn
-    if _conn is None or _conn.closed:
-        import psycopg2
-        _conn = psycopg2.connect(DATABASE_URL)
-        _conn.autocommit = False
+    if _conn is not None and not _conn.closed:
+        try:
+            _conn.cursor().execute("SELECT 1")
+            return _conn
+        except Exception:
+            try:
+                _conn.close()
+            except Exception:
+                pass
+            _conn = None
+    import psycopg2
+    _conn = psycopg2.connect(DATABASE_URL)
+    _conn.autocommit = False
     return _conn
 
 
@@ -48,36 +57,43 @@ def load_json(key, default=None):
     """Read a JSONB document from the DB. Returns default if not found."""
     if not DATABASE_URL:
         return _load_file(key, default)
-    try:
-        conn = _get_conn()
-        with conn.cursor() as cur:
-            cur.execute("SELECT data FROM app_data WHERE key = %s", (key,))
-            row = cur.fetchone()
-            return row[0] if row else default
-    except Exception:
-        global _conn
-        _conn = None
-        return _load_file(key, default)
+    for attempt in range(2):
+        try:
+            conn = _get_conn()
+            with conn.cursor() as cur:
+                cur.execute("SELECT data FROM app_data WHERE key = %s", (key,))
+                row = cur.fetchone()
+                return row[0] if row else default
+        except Exception:
+            global _conn
+            _conn = None
+            if attempt == 0:
+                continue
+            return _load_file(key, default)
 
 
 def save_json(key, data):
     """Upsert a JSONB document into the DB."""
     if not DATABASE_URL:
         return _save_file(key, data)
-    try:
-        from psycopg2.extras import Json
-        conn = _get_conn()
-        with conn.cursor() as cur:
-            cur.execute("""
-                INSERT INTO app_data (key, data, updated_at)
-                VALUES (%s, %s, NOW())
-                ON CONFLICT (key) DO UPDATE SET data = EXCLUDED.data, updated_at = NOW()
-            """, (key, Json(data)))
-        conn.commit()
-    except Exception:
-        global _conn
-        _conn = None
-        _save_file(key, data)
+    from psycopg2.extras import Json
+    for attempt in range(2):
+        try:
+            conn = _get_conn()
+            with conn.cursor() as cur:
+                cur.execute("""
+                    INSERT INTO app_data (key, data, updated_at)
+                    VALUES (%s, %s, NOW())
+                    ON CONFLICT (key) DO UPDATE SET data = EXCLUDED.data, updated_at = NOW()
+                """, (key, Json(data)))
+            conn.commit()
+            return
+        except Exception:
+            global _conn
+            _conn = None
+            if attempt == 0:
+                continue
+            raise
 
 
 # --- File fallback (local dev without DB) ---
